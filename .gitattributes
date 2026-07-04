@@ -36,7 +36,6 @@
 *.uxml                  text linguist-language=xml linguist-detectable
 
 # Unity YAML files
-*.anim                  unity-yaml
 *.asset                 unity-yaml
 *.brush                 unity-yaml
 *.controller            unity-yaml
@@ -120,6 +119,7 @@ Packages/packages-lock.json linguist-generated
 *.wmv                   lfs
 
 # Images
+*.aseprite              lfs
 *.bmp                   lfs
 *.exr                   lfs
 *.gif                   lfs
@@ -134,6 +134,9 @@ Packages/packages-lock.json linguist-generated
 *.tif                   lfs
 *.tiff                  lfs
 *.webp                  lfs
+
+# Animation clips requested as binary/LFS assets for this project.
+*.anim                  lfs
 
 # Compressed Archive
 *.7z                    lfs
