@@ -55,4 +55,14 @@ namespace DungeonCrawler.Combat
 
         public CombatState ResultState { get; }
     }
+
+    public readonly struct DamageResolvedEvent
+    {
+        public DamageResolvedEvent(DamageResult result)
+        {
+            Result = result;
+        }
+
+        public DamageResult Result { get; }
+    }
 }

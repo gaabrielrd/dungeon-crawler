@@ -6,6 +6,7 @@ namespace DungeonCrawler.Combat
     public sealed class CombatController
     {
         private readonly IEventBus _eventBus;
+        private readonly DamageResolver _damageResolver = new DamageResolver();
         private TurnManager _turnManager;
 
         public CombatController(CombatFormationState formation, IEventBus eventBus)
@@ -19,6 +20,26 @@ namespace DungeonCrawler.Combat
         public CombatState State { get; private set; } = CombatState.Initializing;
 
         public CombatantState CurrentCombatant { get; private set; }
+
+        public DamageResult ExecuteBasicAttack(CombatantState target)
+        {
+            if (State != CombatState.PlayerTurn && State != CombatState.EnemyTurn)
+            {
+                throw new InvalidOperationException("Basic attacks can only execute during an active combatant turn.");
+            }
+
+            if (CurrentCombatant == null)
+            {
+                throw new InvalidOperationException("There is no active combatant to execute a basic attack.");
+            }
+
+            var action = new CombatAction(CombatActionType.BasicAttack, CurrentCombatant, target);
+            var result = _damageResolver.Resolve(action);
+            _eventBus.Publish(new DamageResolvedEvent(result));
+            CompleteCurrentTurn();
+
+            return result;
+        }
 
         public void StartCombat()
         {
