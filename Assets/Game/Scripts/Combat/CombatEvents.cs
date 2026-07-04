@@ -1,0 +1,58 @@
+namespace DungeonCrawler.Combat
+{
+    public readonly struct CombatStartedEvent
+    {
+        public CombatStartedEvent(CombatFormationState formation)
+        {
+            Formation = formation;
+        }
+
+        public CombatFormationState Formation { get; }
+    }
+
+    public readonly struct CombatStateChangedEvent
+    {
+        public CombatStateChangedEvent(CombatState previousState, CombatState currentState)
+        {
+            PreviousState = previousState;
+            CurrentState = currentState;
+        }
+
+        public CombatState PreviousState { get; }
+
+        public CombatState CurrentState { get; }
+    }
+
+    public readonly struct TurnStartedEvent
+    {
+        public TurnStartedEvent(CombatantState combatant, CombatState state)
+        {
+            Combatant = combatant;
+            State = state;
+        }
+
+        public CombatantState Combatant { get; }
+
+        public CombatState State { get; }
+    }
+
+    public readonly struct TurnEndedEvent
+    {
+        public TurnEndedEvent(CombatantState combatant)
+        {
+            Combatant = combatant;
+        }
+
+        public CombatantState Combatant { get; }
+    }
+
+    public readonly struct CombatEndedEvent
+    {
+        public CombatEndedEvent(CombatState resultState)
+        {
+            ResultState = resultState;
+        }
+
+        public CombatState ResultState { get; }
+    }
+}
