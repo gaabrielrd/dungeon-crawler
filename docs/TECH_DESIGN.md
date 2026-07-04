@@ -96,6 +96,18 @@ Código específico de plataforma isolado.
 Integrações externas encapsuladas.
 ```
 
+Status atual:
+
+| Área | Status |
+|---|---|
+| Dados estáticos via ScriptableObjects | Implemented inicial |
+| Estado runtime de combate | Implemented |
+| Serviços de domínio de combate | Implemented parcial |
+| Serviços externos, UGS, IAP, Ads, Remote Config | Planned |
+| UI final e ViewModels completos | Planned |
+| Persistência local | Implemented inicial |
+| Cloud save e migração | Planned |
+
 ---
 
 ## 3. Estrutura de pastas
@@ -177,7 +189,11 @@ Assets/
 
 ## 4. Assembly definitions
 
+Status: Planned.
+
 Usar `.asmdef` para reduzir tempo de compilação e impor fronteiras arquiteturais.
+
+Observação: o projeto ainda não usa `.asmdef`. Não adicionar assemblies sem uma tarefa explícita, porque isso altera fronteiras de compilação e referências Unity.
 
 Sugestão:
 
@@ -377,16 +393,16 @@ ConfigService
 
 ### 8.2 Combat
 
-```text
-CombatController
-TurnManager
-TargetingRulesService
-DamageResolver
-HealingResolver
-StatusEffectResolver
-CombatRewardResolver
-CombatLogService
-```
+| Serviço | Status |
+|---|---|
+| CombatController | Implemented |
+| TurnManager | Implemented |
+| TargetingRulesService | Implemented |
+| DamageResolver | Implemented |
+| HealingResolver | Planned |
+| StatusEffectResolver | Planned |
+| CombatRewardResolver | Planned |
+| CombatLogService | Planned |
 
 ### 8.3 Dungeon
 
@@ -437,23 +453,24 @@ RemoteConfigService
 
 ## 9. Fluxo de combate técnico
 
-```text
-CombatScene recebe EncounterDefinition + PartyState
-→ CombatController cria CombatantStates
-→ TurnManager calcula ordem inicial
-→ UI renderiza estado
-→ Player escolhe Skill + Target
-→ TargetingRulesService valida ação
-→ CombatController executa comando
-→ DamageResolver / StatusEffectResolver aplicam efeitos
-→ EventBus publica eventos de feedback
-→ TurnManager avança turno
-→ AI decide ações dos inimigos
-→ Verificar vitória/derrota
-→ CombatRewardResolver gera recompensa
-→ DungeonRunService avança estado da run
-→ SaveService salva snapshot
-```
+| Etapa | Status |
+|---|---|
+| CombatScene recebe EncounterDefinition + PartyState | Planned |
+| CombatController cria/recebe CombatantStates | Implemented parcial |
+| TurnManager calcula ordem inicial | Implemented |
+| UI renderiza estado | Planned |
+| Player escolhe Skill + Target | Planned |
+| TargetingRulesService valida ação | Implemented |
+| CombatController executa comando básico | Implemented |
+| DamageResolver aplica dano básico | Implemented |
+| StatusEffectResolver aplica efeitos | Planned |
+| EventBus publica eventos de feedback | Implemented |
+| TurnManager avança turno | Implemented |
+| AI decide ações dos inimigos | Planned |
+| Verificar vitória/derrota | Implemented |
+| CombatRewardResolver gera recompensa | Planned |
+| DungeonRunService avança estado da run | Planned |
+| SaveService salva snapshot | Planned |
 
 ---
 
@@ -576,17 +593,17 @@ Ad Reward Popup
 
 Prioridade alta:
 
-```text
-TurnManager
-TargetingRulesService
-DamageResolver
-StatusEffectResolver
-FloorGenerator
-EncounterGenerator
-SaveMigrationService
-Cloud conflict resolver
-Economy calculations
-```
+| Teste | Status |
+|---|---|
+| TurnManager | Implemented |
+| TargetingRulesService | Implemented |
+| DamageResolver | Implemented |
+| StatusEffectResolver | Planned |
+| FloorGenerator | Planned |
+| EncounterGenerator | Planned |
+| SaveMigrationService | Planned |
+| Cloud conflict resolver | Planned |
+| Economy calculations | Planned |
 
 ### 14.2 PlayMode tests
 
@@ -696,4 +713,3 @@ Production release
 | Ads prejudicarem retenção | priorizar rewarded ads, evitar interstitial agressivo |
 | Assets inconsistentes | pipeline visual com paleta e tamanhos padronizados |
 | Codex alterar arquitetura indevidamente | manter CODING_GUIDELINES.md e tarefas pequenas |
-

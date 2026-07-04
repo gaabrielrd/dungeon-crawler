@@ -21,15 +21,15 @@ GitHub + Codex
 
 ## 2. Milestones
 
-| Milestone | Objetivo |
-|---|---|
-| Sprint 0 | Fundação técnica e builds mobile. |
-| Sprint 1 | Protótipo de combate. |
-| Sprint 2 | Dungeon run procedural. |
-| Sprint 3 | Sistemas RPG. |
-| Sprint 4 | Conta, save local e cloud save. |
-| Sprint 5 | Monetização com ads e IAP. |
-| Sprint 6 | Conteúdo inicial, balanceamento e soft launch. |
+| Milestone | Objetivo | Status |
+|---|---|---|
+| Sprint 0 | Fundação técnica e builds mobile. | Implemented parcial |
+| Sprint 1 | Protótipo de combate. | Implemented parcial |
+| Sprint 2 | Dungeon run procedural. | Planned |
+| Sprint 3 | Sistemas RPG. | Planned |
+| Sprint 4 | Conta, save local e cloud save. | Implemented parcial |
+| Sprint 5 | Monetização com ads e IAP. | Planned |
+| Sprint 6 | Conteúdo inicial, balanceamento e soft launch. | Planned |
 
 ---
 
@@ -41,21 +41,21 @@ Criar o projeto Unity com estrutura profissional, versionamento, builds Android/
 
 ### Entregas
 
-```text
-Projeto Unity 6.3 LTS criado
-Repositório GitHub criado
-Git LFS configurado
-Estrutura de pastas criada
-Assembly definitions criados
-Cena Bootstrap criada
-Cena MainMenu criada
-Build Android local funcionando
-Build iOS gerada e abrindo no Xcode
-CODING_GUIDELINES.md aplicado ao repositório
-ScriptableObject base criado
-EventBus inicial criado
-ServiceRegistry inicial criado
-```
+| Entrega | Status |
+|---|---|
+| Projeto Unity 6.3 LTS criado | Implemented |
+| Repositório GitHub criado | Implemented |
+| Git LFS configurado | Implemented |
+| Estrutura de pastas criada | Implemented |
+| Assembly definitions criados | Planned |
+| Cena Bootstrap criada | Implemented |
+| Cena MainMenu criada | Implemented |
+| Build Android local funcionando | Planned |
+| Build iOS gerada e abrindo no Xcode | Planned |
+| CODING_GUIDELINES.md aplicado ao repositório | Implemented |
+| ScriptableObject base criado | Implemented |
+| EventBus inicial criado | Implemented |
+| ServiceRegistry inicial criado | Implemented |
 
 ### Tarefas
 
@@ -97,52 +97,52 @@ Criar o primeiro combate funcional com party, inimigos, turnos, habilidades e vi
 
 ### Entregas
 
-```text
-Party com 4 posições
-Inimigos com 1 a 4 posições
-TurnManager
-CombatController
-SkillDefinition
-TargetingRulesService
-DamageResolver
-StatusEffectResolver básico
-UI básica de combate
-1 herói jogável
-1 inimigo comum
-Vitória e derrota
-Testes de regras principais
-```
+| Entrega | Status |
+|---|---|
+| Party com 4 posições | Implemented |
+| Inimigos com 1 a 4 posições | Implemented |
+| TurnManager | Implemented |
+| CombatController | Implemented |
+| SkillDefinition | Implemented |
+| TargetingRulesService | Implemented |
+| DamageResolver | Implemented |
+| StatusEffectResolver básico | Planned |
+| UI básica de combate | Planned |
+| 1 herói jogável | Planned |
+| 1 inimigo comum | Planned |
+| Vitória e derrota | Implemented |
+| Testes de regras principais | Implemented |
 
 ### Tarefas
 
-```text
-Criar CombatantState.
-Criar HeroClassDefinition.
-Criar EnemyDefinition.
-Criar SkillDefinition.
-Implementar ranks 1-4.
-Implementar TargetingRulesService.
-Implementar TurnManager.
-Implementar DamageResolver.
-Implementar morte de combatente.
-Implementar fluxo de vitória/derrota.
-Criar UI temporária de combate.
-Criar botão de skill.
-Criar seleção de alvo.
-Criar testes EditMode.
-```
+| Tarefa | Status |
+|---|---|
+| Criar CombatantState. | Implemented |
+| Criar HeroClassDefinition. | Implemented |
+| Criar EnemyDefinition. | Implemented |
+| Criar SkillDefinition. | Implemented |
+| Implementar ranks 1-4. | Implemented |
+| Implementar TargetingRulesService. | Implemented |
+| Implementar TurnManager. | Implemented |
+| Implementar DamageResolver. | Implemented |
+| Implementar morte de combatente. | Implemented |
+| Implementar fluxo de vitória/derrota. | Implemented |
+| Criar UI temporária de combate. | Planned |
+| Criar botão de skill. | Planned |
+| Criar seleção de alvo. | Planned |
+| Criar testes EditMode. | Implemented |
 
 ### Critérios de aceite
 
-```text
-Jogador inicia combate.
-Jogador escolhe habilidade.
-Sistema valida alvo por rank.
-Inimigo age automaticamente.
-HP é reduzido corretamente.
-Combate termina com vitória ou derrota.
-Testes de TurnManager e TargetingRulesService passam.
-```
+| Critério | Status |
+|---|---|
+| Jogador inicia combate. | Implemented no domínio; UI Planned |
+| Jogador escolhe habilidade. | Planned |
+| Sistema valida alvo por rank. | Implemented |
+| Inimigo age automaticamente. | Planned |
+| HP é reduzido corretamente. | Implemented |
+| Combate termina com vitória ou derrota. | Implemented |
+| Testes de TurnManager e TargetingRulesService passam. | Implemented |
 
 ---
 
@@ -167,6 +167,8 @@ Recompensa pós-combate
 Tela simples de resultado
 Primeiro fluxo de avançar andar
 ```
+
+Status: Planned.
 
 ### Tarefas
 
@@ -223,6 +225,8 @@ Equipamentos básicos
 Status effects expandidos
 ```
 
+Status: Planned.
+
 ### Tarefas
 
 ```text
@@ -265,20 +269,20 @@ Implementar persistência robusta local e em nuvem, com autenticação Google/Ap
 
 ### Entregas
 
-```text
-SaveSnapshot v1
-LocalSaveService
-SaveMigrationService
-Unity Authentication
-Login anônimo
-Account linking Google
-Account linking Apple
-Unity Cloud Save
-CloudConflictResolver
-Tela de conta
-Tela de conflito de save
-Testes de save/migração
-```
+| Entrega | Status |
+|---|---|
+| SaveSnapshot v1 | Implemented inicial |
+| LocalSaveService | Implemented inicial |
+| SaveMigrationService | Planned |
+| Unity Authentication | Planned |
+| Login anônimo | Planned |
+| Account linking Google | Planned |
+| Account linking Apple | Planned |
+| Unity Cloud Save | Planned |
+| CloudConflictResolver | Planned |
+| Tela de conta | Planned |
+| Tela de conflito de save | Planned |
+| Testes de save/migração | Planned |
 
 ### Tarefas
 
@@ -339,6 +343,8 @@ Analytics de monetização
 Remote Config para parâmetros econômicos
 ```
 
+Status: Planned.
+
 ### Tarefas
 
 ```text
@@ -397,6 +403,8 @@ Tela de configurações
 Build de teste fechado Android
 Build TestFlight iOS
 ```
+
+Status: Planned.
 
 ### Tarefas
 
@@ -526,4 +534,3 @@ Não implemente Unity Gaming Services ainda.
 Não crie lógica de UI complexa.
 Siga CODING_GUIDELINES.md.
 ```
-
