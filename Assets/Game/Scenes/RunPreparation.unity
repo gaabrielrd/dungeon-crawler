@@ -189,7 +189,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: Main Menu
+  m_Text: Run Preparation
 --- !u!222 &57649668
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -360,7 +360,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: Start Run
+  m_Text: Start Combat Prototype
 --- !u!222 &310339869
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -518,7 +518,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: Entry point for starting runs and opening global settings.
+  m_Text: Future home for party, loadout, dungeon seed, and run modifier selection.
 --- !u!222 &421723862
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -542,7 +542,7 @@ GameObject:
   - component: {fileID: 435495779}
   - component: {fileID: 435495778}
   m_Layer: 0
-  m_Name: Main Menu Screen
+  m_Name: Run Preparation Screen
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -615,13 +615,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 435495776}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 00b804f99deec0146b8dc8721caddac3, type: 3}
+  m_Script: {fileID: 11500000, guid: bb7f1b7baf0146444b8fc1569b45c427, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DungeonCrawler.UI.MainMenuScreen
+  m_EditorClassIdentifier: Assembly-CSharp::DungeonCrawler.UI.RunPreparationScreen
   canvasGroup: {fileID: 435495782}
   navigator: {fileID: 435495781}
-  startRunButton: {fileID: 1071226326}
-  settingsButton: {fileID: 1070899304}
+  startCombatButton: {fileID: 1071226326}
+  backButton: {fileID: 1070899304}
 --- !u!114 &435495781
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -819,7 +819,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: Settings
+  m_Text: Back
 --- !u!222 &1054020040
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -841,7 +841,7 @@ GameObject:
   - component: {fileID: 1070899305}
   - component: {fileID: 1070899304}
   m_Layer: 0
-  m_Name: Settings Button
+  m_Name: Back Button
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -962,7 +962,7 @@ GameObject:
   - component: {fileID: 1071226327}
   - component: {fileID: 1071226326}
   m_Layer: 0
-  m_Name: Start Run Button
+  m_Name: Start Combat Prototype Button
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
