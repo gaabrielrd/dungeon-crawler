@@ -51,6 +51,7 @@ namespace DungeonCrawler.Combat
             var action = new CombatAction(CombatActionType.BasicAttack, CurrentCombatant, target);
             var result = _damageResolver.Resolve(action);
             _eventBus.Publish(new DamageResolvedEvent(result));
+            PublishDeathEventIfNeeded(result);
             CompleteCurrentTurn();
 
             return result;
@@ -140,7 +141,25 @@ namespace DungeonCrawler.Combat
         {
             CurrentCombatant = null;
             ChangeState(resultState);
+
+            if (resultState == CombatState.Victory)
+            {
+                _eventBus.Publish(new CombatVictoryEvent(Formation));
+            }
+            else if (resultState == CombatState.Defeat)
+            {
+                _eventBus.Publish(new CombatDefeatEvent(Formation));
+            }
+
             _eventBus.Publish(new CombatEndedEvent(resultState));
+        }
+
+        private void PublishDeathEventIfNeeded(DamageResult result)
+        {
+            if (result.TargetHpBefore > 0 && result.TargetHpAfter == 0)
+            {
+                _eventBus.Publish(new CombatantDiedEvent(result.Target, result));
+            }
         }
 
         private void ChangeState(CombatState nextState)

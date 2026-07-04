@@ -61,6 +61,8 @@ namespace DungeonCrawler.Combat
 
         public bool IsAlive => currentHp > 0;
 
+        public bool IsDead => !IsAlive;
+
         private static int Clamp(int value, int min, int max)
         {
             if (value < min)

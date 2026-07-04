@@ -145,6 +145,35 @@ namespace DungeonCrawler.Tests.EditMode
         }
 
         [Test]
+        public void LethalBasicAttackPublishesCombatantDiedEvent()
+        {
+            var eventBus = new EventBus();
+            var enemy = CreateCombatant("enemy", CombatSide.Enemy, rank: 1, speed: 1, maxHp: 5, attack: 4, defense: 0);
+            var controller = new CombatController(
+                CreateFormation(
+                    CreateCombatant("hero", CombatSide.Player, rank: 1, speed: 10, maxHp: 20, attack: 8, defense: 1),
+                    enemy),
+                eventBus);
+            CombatantDiedEvent deathEvent = default;
+            var eventCount = 0;
+
+            eventBus.Subscribe<CombatantDiedEvent>(combatantDied =>
+            {
+                eventCount++;
+                deathEvent = combatantDied;
+            });
+
+            controller.StartCombat();
+            controller.ExecuteBasicAttack(enemy);
+
+            Assert.That(eventCount, Is.EqualTo(1));
+            Assert.That(deathEvent.Combatant, Is.SameAs(enemy));
+            Assert.That(deathEvent.DamageResult.Target, Is.SameAs(enemy));
+            Assert.That(deathEvent.DamageResult.TargetHpBefore, Is.EqualTo(5));
+            Assert.That(deathEvent.DamageResult.TargetHpAfter, Is.Zero);
+        }
+
+        [Test]
         public void ValidBasicAttackAdvancesTurn()
         {
             var enemy = CreateCombatant("enemy", CombatSide.Enemy, rank: 1, speed: 1, maxHp: 20, attack: 4, defense: 2);

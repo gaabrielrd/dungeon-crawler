@@ -120,15 +120,17 @@ namespace DungeonCrawler.Tests.EditMode
         }
 
         [Test]
-        public void IsAliveReflectsCurrentHp()
+        public void AliveAndDeadStateReflectCurrentHp()
         {
             var state = CombatantStateFactory.CreateEnemy(CreateEnemyDefinition(1), CombatRank.Front);
 
             Assert.That(state.IsAlive, Is.True);
+            Assert.That(state.IsDead, Is.False);
 
             state.CurrentHp = 0;
 
             Assert.That(state.IsAlive, Is.False);
+            Assert.That(state.IsDead, Is.True);
         }
 
         private HeroClassDefinition CreateHeroDefinition(int index)

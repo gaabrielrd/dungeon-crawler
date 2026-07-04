@@ -464,10 +464,10 @@ RemoteConfigService
 | CombatController executa comando básico | Implemented |
 | DamageResolver aplica dano básico | Implemented |
 | StatusEffectResolver aplica efeitos | Planned |
-| EventBus publica eventos de feedback | Implemented |
+| EventBus publica eventos de feedback, morte, vitória e derrota | Implemented |
 | TurnManager avança turno | Implemented |
 | AI decide ações dos inimigos | Planned |
-| Verificar vitória/derrota | Implemented |
+| Verificar morte, vitória e derrota | Implemented |
 | CombatRewardResolver gera recompensa | Planned |
 | DungeonRunService avança estado da run | Planned |
 | SaveService salva snapshot | Planned |

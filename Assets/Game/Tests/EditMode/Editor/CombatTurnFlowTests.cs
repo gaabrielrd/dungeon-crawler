@@ -124,12 +124,16 @@ namespace DungeonCrawler.Tests.EditMode
             var turnStartedCount = 0;
             var turnEndedCount = 0;
             var combatEndedCount = 0;
+            var combatVictoryCount = 0;
+            var combatDefeatCount = 0;
             CombatState resultState = CombatState.Initializing;
 
             eventBus.Subscribe<CombatStartedEvent>(_ => combatStartedCount++);
             eventBus.Subscribe<CombatStateChangedEvent>(_ => stateChangedCount++);
             eventBus.Subscribe<TurnStartedEvent>(_ => turnStartedCount++);
             eventBus.Subscribe<TurnEndedEvent>(_ => turnEndedCount++);
+            eventBus.Subscribe<CombatVictoryEvent>(_ => combatVictoryCount++);
+            eventBus.Subscribe<CombatDefeatEvent>(_ => combatDefeatCount++);
             eventBus.Subscribe<CombatEndedEvent>(combatEnded =>
             {
                 combatEndedCount++;
@@ -144,8 +148,78 @@ namespace DungeonCrawler.Tests.EditMode
             Assert.That(stateChangedCount, Is.EqualTo(3));
             Assert.That(turnStartedCount, Is.EqualTo(1));
             Assert.That(turnEndedCount, Is.EqualTo(1));
+            Assert.That(combatVictoryCount, Is.EqualTo(1));
+            Assert.That(combatDefeatCount, Is.Zero);
             Assert.That(combatEndedCount, Is.EqualTo(1));
             Assert.That(resultState, Is.EqualTo(CombatState.Victory));
+        }
+
+        [Test]
+        public void CombatControllerPublishesDefeatEvent()
+        {
+            var eventBus = new EventBus();
+            var hero = CreateCombatant("hero", CombatSide.Player, rank: 1, speed: 10);
+            var controller = new CombatController(
+                CreateFormation(hero, CreateCombatant("enemy", CombatSide.Enemy, rank: 1, speed: 1)),
+                eventBus);
+            var combatVictoryCount = 0;
+            var combatDefeatCount = 0;
+            var combatEndedCount = 0;
+            CombatState resultState = CombatState.Initializing;
+
+            eventBus.Subscribe<CombatVictoryEvent>(_ => combatVictoryCount++);
+            eventBus.Subscribe<CombatDefeatEvent>(_ => combatDefeatCount++);
+            eventBus.Subscribe<CombatEndedEvent>(combatEnded =>
+            {
+                combatEndedCount++;
+                resultState = combatEnded.ResultState;
+            });
+
+            controller.StartCombat();
+            hero.CurrentHp = 0;
+            controller.CompleteCurrentTurn();
+
+            Assert.That(combatVictoryCount, Is.Zero);
+            Assert.That(combatDefeatCount, Is.EqualTo(1));
+            Assert.That(combatEndedCount, Is.EqualTo(1));
+            Assert.That(resultState, Is.EqualTo(CombatState.Defeat));
+        }
+
+        [Test]
+        public void CombatRejectsActionsAfterVictory()
+        {
+            var enemy = CreateCombatant("enemy", CombatSide.Enemy, rank: 1, speed: 1);
+            var controller = CreateController(CreateFormation(
+                CreateCombatant("hero", CombatSide.Player, rank: 1, speed: 10),
+                enemy));
+
+            controller.StartCombat();
+            enemy.CurrentHp = 0;
+            controller.CompleteCurrentTurn();
+
+            Assert.That(controller.State, Is.EqualTo(CombatState.Victory));
+            Assert.Throws<InvalidOperationException>(() => controller.ExecuteBasicAttack(enemy));
+            Assert.Throws<InvalidOperationException>(() => controller.CompleteCurrentTurn());
+            Assert.That(controller.State, Is.EqualTo(CombatState.Victory));
+            Assert.That(controller.CurrentCombatant, Is.Null);
+        }
+
+        [Test]
+        public void CombatRejectsActionsAfterDefeat()
+        {
+            var hero = CreateCombatant("hero", CombatSide.Player, rank: 1, speed: 10);
+            var enemy = CreateCombatant("enemy", CombatSide.Enemy, rank: 1, speed: 1);
+            var controller = CreateController(CreateFormation(hero, enemy));
+
+            controller.StartCombat();
+            hero.CurrentHp = 0;
+            controller.CompleteCurrentTurn();
+
+            Assert.That(controller.State, Is.EqualTo(CombatState.Defeat));
+            Assert.Throws<InvalidOperationException>(() => controller.ExecuteBasicAttack(hero));
+            Assert.Throws<InvalidOperationException>(() => controller.CompleteCurrentTurn());
+            Assert.That(controller.State, Is.EqualTo(CombatState.Defeat));
+            Assert.That(controller.CurrentCombatant, Is.Null);
         }
 
         [Test]

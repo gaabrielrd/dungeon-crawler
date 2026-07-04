@@ -56,6 +56,39 @@ namespace DungeonCrawler.Combat
         public CombatState ResultState { get; }
     }
 
+    public readonly struct CombatantDiedEvent
+    {
+        public CombatantDiedEvent(CombatantState combatant, DamageResult damageResult)
+        {
+            Combatant = combatant;
+            DamageResult = damageResult;
+        }
+
+        public CombatantState Combatant { get; }
+
+        public DamageResult DamageResult { get; }
+    }
+
+    public readonly struct CombatVictoryEvent
+    {
+        public CombatVictoryEvent(CombatFormationState formation)
+        {
+            Formation = formation;
+        }
+
+        public CombatFormationState Formation { get; }
+    }
+
+    public readonly struct CombatDefeatEvent
+    {
+        public CombatDefeatEvent(CombatFormationState formation)
+        {
+            Formation = formation;
+        }
+
+        public CombatFormationState Formation { get; }
+    }
+
     public readonly struct DamageResolvedEvent
     {
         public DamageResolvedEvent(DamageResult result)

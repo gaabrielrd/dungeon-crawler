@@ -127,6 +127,7 @@ Criar o primeiro combate funcional com party, inimigos, turnos, habilidades e vi
 | Implementar DamageResolver. | Implemented |
 | Implementar morte de combatente. | Implemented |
 | Implementar fluxo de vitória/derrota. | Implemented |
+| Implementar eventos de morte, vitória e derrota. | Implemented |
 | Criar UI temporária de combate. | Planned |
 | Criar botão de skill. | Planned |
 | Criar seleção de alvo. | Planned |
