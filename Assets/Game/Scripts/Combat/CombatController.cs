@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using DungeonCrawler.Core.Services;
+using DungeonCrawler.Data.Definitions;
 
 namespace DungeonCrawler.Combat
 {
@@ -7,6 +9,7 @@ namespace DungeonCrawler.Combat
     {
         private readonly IEventBus _eventBus;
         private readonly DamageResolver _damageResolver = new DamageResolver();
+        private readonly TargetingRulesService _targetingRulesService = new TargetingRulesService();
         private TurnManager _turnManager;
 
         public CombatController(CombatFormationState formation, IEventBus eventBus)
@@ -20,6 +23,18 @@ namespace DungeonCrawler.Combat
         public CombatState State { get; private set; } = CombatState.Initializing;
 
         public CombatantState CurrentCombatant { get; private set; }
+
+        public IReadOnlyList<CombatantState> GetValidTargetsForCurrentCombatant(SkillDefinition skill)
+        {
+            return _targetingRulesService.GetValidTargets(skill, CurrentCombatant, Formation);
+        }
+
+        public TargetingValidationResult ValidateSkillTargetForCurrentCombatant(
+            SkillDefinition skill,
+            CombatantState target)
+        {
+            return _targetingRulesService.ValidateTarget(skill, CurrentCombatant, target);
+        }
 
         public DamageResult ExecuteBasicAttack(CombatantState target)
         {
