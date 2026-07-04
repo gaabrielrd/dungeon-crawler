@@ -17,11 +17,15 @@ namespace DungeonCrawler.Core.Services
         string StartingSceneName { get; }
     }
 
-    public interface ILocalSaveService : IInitializableService
+    public interface ISaveService : IInitializableService
     {
         bool HasLoadedSave { get; }
 
-        string ActiveSaveId { get; }
+        SaveSnapshot Current { get; }
+
+        Task<SaveSnapshot> LoadOrCreateAsync();
+
+        Task SaveAsync(SaveSnapshot snapshot);
     }
 
     public interface IAuthService : IInitializableService
