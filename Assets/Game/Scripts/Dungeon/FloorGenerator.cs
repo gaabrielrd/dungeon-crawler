@@ -12,7 +12,7 @@ namespace DungeonCrawler.Dungeon
             "void"
         };
 
-        public GeneratedFloor GenerateFloor(string runSeed, int floorNumber, string currentThemeId)
+        public GeneratedFloor GenerateFloor(string runSeed, int floorNumber, string currentThemeId, string nextThemeIdOverride = null)
         {
             if (runSeed == null) throw new ArgumentNullException(nameof(runSeed));
             if (currentThemeId == null) throw new ArgumentNullException(nameof(currentThemeId));
@@ -30,7 +30,7 @@ namespace DungeonCrawler.Dungeon
 
             if (isThemeTransition)
             {
-                nextThemeId = ResolveNextThemeId(currentThemeId);
+                nextThemeId = nextThemeIdOverride ?? ResolveNextThemeId(currentThemeId);
                 themeId = nextThemeId;
             }
 

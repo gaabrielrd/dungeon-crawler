@@ -419,6 +419,12 @@ namespace DungeonCrawler.UI
                 return "Tap Basic Attack, then tap a valid enemy target.";
             }
 
+            var themeName = string.Empty;
+            if (_dungeonRunService is DungeonRunService concrete && concrete.CurrentThemeDefinition != null)
+            {
+                themeName = $" [{concrete.CurrentThemeDefinition.DisplayName}]";
+            }
+
             var label = floor.PrimaryType == DungeonCrawler.Dungeon.FloorType.Boss
                 ? $"Floor {floor.FloorNumber} - Boss Floor"
                 : $"Floor {floor.FloorNumber}";
@@ -427,6 +433,8 @@ namespace DungeonCrawler.UI
             {
                 label += $" - {floor.Encounter.DisplayName}";
             }
+
+            label += themeName;
 
             return label;
         }

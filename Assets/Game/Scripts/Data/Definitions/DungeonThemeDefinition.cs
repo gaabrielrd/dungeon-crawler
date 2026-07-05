@@ -11,6 +11,7 @@ namespace DungeonCrawler.Data.Definitions
         [SerializeField] private int lastFloor;
         [SerializeField] private string visualPalette;
         [SerializeField] private Sprite background;
+        [SerializeField] private Sprite bossBackground;
         [SerializeField] private AudioClip music;
         [SerializeField] private EncounterTableDefinition commonEncounters;
         [SerializeField] private EncounterTableDefinition eliteEncounters;
@@ -24,6 +25,8 @@ namespace DungeonCrawler.Data.Definitions
         public string VisualPalette => visualPalette;
 
         public Sprite Background => background;
+
+        public Sprite BossBackground => bossBackground;
 
         public AudioClip Music => music;
 

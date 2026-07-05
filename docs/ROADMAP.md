@@ -196,6 +196,9 @@ Criar tela Combat Result. Status: Implemented inicial.
 Criar transição de Combat para próximo andar.
 Criar tela Resting Site placeholder. Status: Implemented.
 Criar testes de geração procedural.
+Criar DungeonThemeResolver. Status: Implemented.
+Criar assets de tema Forgotten Crypt, Fungal Depths, Ember Mines, Sunken Temple, Astral Abyss. Status: Implemented.
+Criar testes de DungeonThemeResolver (transição 20/21 e 40/41). Status: Implemented.
 ```
 
 ### Critérios de aceite
@@ -205,7 +208,7 @@ Run inicia no andar 1.
 Andares comuns geram combates.
 Andar 5 gera boss. Status: Implemented inicial.
 Andar 10 gera boss e depois resting site. Status: Implemented.
-Andar 20 troca tema após boss/resting site. Status: Implemented inicial.
+Andar 20 troca tema após boss/resting site. Status: Implemented.
 Mesma seed gera sequência reproduzível.
 ```
 
@@ -213,6 +216,9 @@ Status atual: os critérios de run, combate comum, boss, resting site por flag,
 transicao de tema e determinismo estao implementados no fluxo de prototipo.
 Resting site agora possui tela dedicada, cura configurável via RestSiteDefinition,
 serviço RestSiteService registrado, e placeholders para futuras features.
+DungeonThemeResolver resolve o tema ativo por andar usando DungeonThemeDefinition,
+com suporte a bossBackground, musica e tabelas de encontro por tema.
+Exibicao placeholder do tema atual no cabecalho de combate.
 
 ---
 
@@ -462,7 +468,7 @@ Build iOS entra no TestFlight.
 ## 10. Backlog pós-MVP
 
 ```text
-Novos temas de dungeon
+Novos temas de dungeon (DungeonThemeResolver implementado, assets de tema criados)
 Novas classes
 Novos bosses
 Eventos especiais

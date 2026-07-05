@@ -33,6 +33,8 @@ namespace DungeonCrawler.Core.Services
 
         public RewardDefinition CurrentRewardDefinition { get; set; }
 
+        public DungeonThemeResolver ThemeResolver { get; set; }
+
         public async Task InitializeAsync()
         {
             await Task.CompletedTask;
@@ -49,6 +51,14 @@ namespace DungeonCrawler.Core.Services
             var run = DungeonRunState.CreateNew(seed, party);
             ActiveRun = run;
             HasActiveRun = true;
+
+            if (ThemeResolver != null)
+            {
+                var theme = ThemeResolver.GetTheme(1);
+                CurrentThemeDefinition = theme;
+                run.CurrentThemeId = theme.Id;
+            }
+
             GenerateCurrentFloor();
             ActiveRun.Status = DungeonRunStatus.Exploring;
 
@@ -121,6 +131,16 @@ namespace DungeonCrawler.Core.Services
             if (!HasActiveRun)
             {
                 throw new InvalidOperationException("No active run to generate a floor for.");
+            }
+
+            if (ThemeResolver != null)
+            {
+                var theme = ThemeResolver.GetTheme(ActiveRun.CurrentFloor);
+                if (theme != CurrentThemeDefinition)
+                {
+                    CurrentThemeDefinition = theme;
+                    ActiveRun.CurrentThemeId = theme.Id;
+                }
             }
 
             var generated = GenerateFloor(ActiveRun.CurrentFloor, ActiveRun.CurrentThemeId);
@@ -227,6 +247,14 @@ namespace DungeonCrawler.Core.Services
             }
 
             var nextFloor = ActiveRun.CurrentFloor + 1;
+
+            if (ThemeResolver != null && ThemeResolver.IsThemeTransitionFloor(nextFloor))
+            {
+                var nextTheme = ThemeResolver.GetTheme(nextFloor);
+                CurrentThemeDefinition = nextTheme;
+                ActiveRun.CurrentThemeId = nextTheme.Id;
+            }
+
             var generated = GenerateFloor(nextFloor, ActiveRun.CurrentThemeId);
 
             ActiveRun.AdvanceFloor();
@@ -269,7 +297,26 @@ namespace DungeonCrawler.Core.Services
         private GeneratedFloor GenerateFloor(int floorNumber, string themeId)
         {
             var floorGen = new FloorGenerator();
-            var generated = floorGen.GenerateFloor(ActiveRun.Seed, floorNumber, themeId);
+            string nextThemeOverride = ThemeResolver?.GetNextThemeId(floorNumber);
+            var generated = floorGen.GenerateFloor(ActiveRun.Seed, floorNumber, themeId, nextThemeOverride);
+
+            if (ThemeResolver != null)
+            {
+                var correctThemeId = ThemeResolver.GetThemeId(floorNumber);
+                if (generated.ThemeId != correctThemeId)
+                {
+                    generated = new GeneratedFloor(
+                        generated.FloorNumber,
+                        generated.PrimaryType,
+                        generated.HasRestingSite,
+                        generated.IsThemeTransition,
+                        correctThemeId,
+                        generated.NextThemeId,
+                        generated.LocalSeed,
+                        generated.Encounter
+                    );
+                }
+            }
 
             if (CurrentThemeDefinition != null)
             {
