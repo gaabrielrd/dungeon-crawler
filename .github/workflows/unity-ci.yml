@@ -1,0 +1,52 @@
+name: Unity Test Runner
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Create Unity Credentials JSON File
+      run: |
+        mkdir -p ~/.unity
+        cat > ~/.unity/config.json << EOF
+        {
+          "userId": "your-user-id",
+          "licenseId": "your-license-id"
+        }
+        EOF
+    - name: Download and Install Unity Hub
+      run: |
+        curl -s https://unity3d.com/hubs/proxy/download/file/Unity_Hub_Installer.package -o unity-hub.deb
+        sudo dpkg -i unity-hub.deb
+        sudo apt-get update && sudo apt-get install -y unityhub
+        unityhub register 2022.3.16f1
+    - name: Run Unity Tests
+      run: |
+        cd Assets/Game
+        unity -batchmode -quit -projectPath . -runTests
+        unity -batchmode -quit -projectPath . -executeMethod "TestCommandLineRunner.RunAllTests"
+    - name: Generate Test Report
+      run: |
+        python3 -c "
+        import sys
+        import os
+        test_dir = 'Assets/Game/Tests/EditMode/Editor'
+        for root, dirs, files in os.walk(test_dir):
+            for file in files:
+                if file.endswith('.xml'):
+                    print(f'Found test result: {os.path.join(root, file)}')
+        "
+    - name: Archive Test Results
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: |
+          Assets/Game/TestResults.xml
+          Assets/Game/Tests/EditMode/Editor/*TestResults-*.xml
+        retention-days: 7
