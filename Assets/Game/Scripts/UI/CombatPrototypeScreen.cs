@@ -941,11 +941,62 @@ namespace DungeonCrawler.UI
                     && _dungeonRunService.HasActiveRun
                     && _dungeonRunService.ActiveRun.CanAdvanceFloor
                     && _dungeonRunService.ActiveRun.LastResolvedReward != null;
+
+                if (canAdvance && HasRestingSiteOnCurrentFloor())
+                {
+                    ShowRestingSiteTransition();
+                    return;
+                }
+
                 SetResultVisible(true, BuildRewardSummary(), canAdvance);
                 return;
             }
 
             SetResultVisible(true, "Run Failed");
+        }
+
+        private bool HasRestingSiteOnCurrentFloor()
+        {
+            if (_dungeonRunService?.ActiveRun?.CurrentFloorInfo == null)
+            {
+                return false;
+            }
+
+            return _dungeonRunService.ActiveRun.CurrentFloorInfo.HasRestingSite;
+        }
+
+        private void ShowRestingSiteTransition()
+        {
+            var floor = _dungeonRunService.ActiveRun.CurrentFloorInfo;
+            var floorNum = floor?.FloorNumber ?? 0;
+            _resultText.text = $"Floor {floorNum} Cleared!\n\nResting Site Ahead.\n\n{_dungeonRunService.ActiveRun.LastResolvedReward?.SoftCurrency ?? 0} Gold earned.";
+
+            var resultParent = _resultText.transform.parent.gameObject;
+            resultParent.SetActive(true);
+
+            if (_nextFloorButton != null)
+            {
+                _nextFloorButton.gameObject.SetActive(true);
+                _nextFloorButton.interactable = true;
+                var text = _nextFloorButton.GetComponentInChildren<Text>();
+                if (text != null) text.text = "Enter Rest Site";
+                _nextFloorButton.onClick.RemoveListener(OnNextFloorPressed);
+                _nextFloorButton.onClick.AddListener(OnEnterRestSitePressed);
+            }
+        }
+
+        private void OnEnterRestSitePressed()
+        {
+            if (_nextFloorButton != null)
+            {
+                _nextFloorButton.onClick.RemoveListener(OnEnterRestSitePressed);
+                _nextFloorButton.onClick.AddListener(OnNextFloorPressed);
+            }
+
+            if (navigator != null)
+            {
+                navigator.GoToRestSite();
+            }
         }
 
         private string BuildRewardSummary()
@@ -981,11 +1032,6 @@ namespace DungeonCrawler.UI
             if (floor == null)
             {
                 return;
-            }
-
-            if (floor.HasRestingSite)
-            {
-                lines.Add("Resting Site Unlocked");
             }
 
             if (floor.IsThemeTransition)

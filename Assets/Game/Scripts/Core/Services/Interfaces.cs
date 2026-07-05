@@ -6,6 +6,17 @@ using DungeonCrawler.Dungeon;
 
 namespace DungeonCrawler.Core.Services
 {
+    public interface IRestSiteService
+    {
+        bool HasRestTaken { get; }
+
+        bool ShouldEnterRestSite(GeneratedFloor floor);
+
+        void Rest(List<CombatantState> party);
+
+        void ResetRestTaken();
+    }
+
     public interface IInitializableService
     {
         bool IsInitialized { get; }

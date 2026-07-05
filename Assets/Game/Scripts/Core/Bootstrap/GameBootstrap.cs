@@ -49,6 +49,7 @@ namespace DungeonCrawler.Core.Bootstrap
             var saveService = new LocalSaveService(authService);
             var sceneLoaderService = new SceneLoaderService();
             var dungeonRunService = new DungeonRunService(eventBus);
+            var restSiteService = new RestSiteService();
 
             ServiceRegistry.Register<IEventBus>(eventBus);
             ServiceRegistry.Register<IAppConfigService>(appConfigService);
@@ -56,6 +57,7 @@ namespace DungeonCrawler.Core.Bootstrap
             ServiceRegistry.Register<ISaveService>(saveService);
             ServiceRegistry.Register<ISceneLoaderService>(sceneLoaderService);
             ServiceRegistry.Register<IDungeonRunService>(dungeonRunService);
+            ServiceRegistry.Register<IRestSiteService>(restSiteService);
 
             await appConfigService.InitializeAsync();
             await authService.InitializeAsync();

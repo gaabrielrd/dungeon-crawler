@@ -272,17 +272,21 @@ notificar resultado do combate
 
 ### 5.4 RestingSite
 
+**Status: Implemented (básico).**
+
 Responsável por:
 
 ```text
-curar party
-comprar itens
-aprender habilidades
-contratar personagens
-melhorar habilidades/equipamentos
-continuar run
-encerrar run, se permitido
+curar party (implemented)
+comprar itens (placeholder)
+aprender habilidades (placeholder)
+contratar personagens (placeholder)
+melhorar habilidades/equipamentos (placeholder)
+continuar run (implemented)
+encerrar run, se permitido (placeholder)
 ```
+
+Classes envolvidas: `RestSiteService` (domínio), `RestSiteScreen` (UI), `RestSiteDefinition` (dados estáticos).
 
 ---
 

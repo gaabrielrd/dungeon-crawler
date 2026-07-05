@@ -10,6 +10,7 @@ namespace DungeonCrawler.UI
         private const string SettingsSceneName = "Settings";
         private const string RunPreparationSceneName = "RunPreparation";
         private const string CombatPrototypeSceneName = "CombatPrototype";
+        private const string RestSiteSceneName = "RestSite";
 
         private bool _isNavigating;
 
@@ -31,6 +32,11 @@ namespace DungeonCrawler.UI
         public void GoToCombatPrototype()
         {
             NavigateToScene(CombatPrototypeSceneName);
+        }
+
+        public void GoToRestSite()
+        {
+            NavigateToScene(RestSiteSceneName);
         }
 
         private async void NavigateToScene(string sceneName)

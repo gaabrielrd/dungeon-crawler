@@ -169,13 +169,15 @@ Tela simples de resultado
 Primeiro fluxo de avançar andar
 ```
 
-Status: Implemented inicial.
+Status: Implemented.
 
 Status atual: run inicia no andar 1 com `GeneratedFloor`, floors de combate podem iniciar
-`CombatController` pela run ativa, vitória libera `Next Floor`, derrota marca a run como
-`Failed`, e a recompensa pós-combate concede gold inicial, suporta item por tabela simples
-e exibe resumo antes de avançar. Boss floors usam `BossEncounters` e aparecem no
-protótipo como boss placeholder.
+`CombatController` pela run ativa, vitória libera `Next Floor` (ou `Enter Rest Site` em floors
+múltiplas de 10), derrota marca a run como `Failed`, e a recompensa pós-combate concede gold
+inicial, suporta item por tabela simples e exibe resumo antes de avançar. Boss floors usam
+`BossEncounters` e aparecem no protótipo como boss placeholder. Resting site possui tela
+placeholder com cura da party, botoes desabilitados para loja/skills/upgrades/hire, e
+transição para o próximo andar.
 
 ### Tarefas
 
@@ -192,7 +194,7 @@ Implementar regra floor % 20 == theme transition.
 Criar recompensa pós-combate. Status: Implemented inicial.
 Criar tela Combat Result. Status: Implemented inicial.
 Criar transição de Combat para próximo andar.
-Criar tela Resting Site placeholder.
+Criar tela Resting Site placeholder. Status: Implemented.
 Criar testes de geração procedural.
 ```
 
@@ -202,13 +204,15 @@ Criar testes de geração procedural.
 Run inicia no andar 1.
 Andares comuns geram combates.
 Andar 5 gera boss. Status: Implemented inicial.
-Andar 10 gera boss e depois resting site. Status: Implemented inicial (flag/placeholder).
+Andar 10 gera boss e depois resting site. Status: Implemented.
 Andar 20 troca tema após boss/resting site. Status: Implemented inicial.
 Mesma seed gera sequência reproduzível.
 ```
 
 Status atual: os critérios de run, combate comum, boss, resting site por flag,
 transicao de tema e determinismo estao implementados no fluxo de prototipo.
+Resting site agora possui tela dedicada, cura configurável via RestSiteDefinition,
+serviço RestSiteService registrado, e placeholders para futuras features.
 
 ---
 

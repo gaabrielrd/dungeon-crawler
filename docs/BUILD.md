@@ -20,7 +20,10 @@ As cenas devem permanecer nesta ordem:
 
 1. `Assets/Game/Scenes/Bootstrap.unity`
 2. `Assets/Game/Scenes/MainMenu.unity`
-3. `Assets/Game/Scenes/CombatPrototype.unity`
+3. `Assets/Game/Scenes/RunPreparation.unity`
+4. `Assets/Game/Scenes/Settings.unity`
+5. `Assets/Game/Scenes/CombatPrototype.unity`
+6. `Assets/Game/Scenes/RestSite.unity`
 
 O fluxo esperado e `Bootstrap -> MainMenu`, sem exigir login, cloud save, monetizacao, certificados finais, TestFlight ou Google Play Console.
 
@@ -104,6 +107,7 @@ O export iOS desta etapa serve para validar que o projeto abre no Xcode. Publica
 - O console do Unity nao tem erros antes da build.
 - `Bootstrap` esta no build index `0`.
 - `MainMenu` esta no build index `1`.
+- `RestSite` esta no build index `5`.
 - A cena inicial carrega `MainMenu` em Play Mode.
 - A build Android gera `Builds/Android/DungeonCrawler.apk`.
 - O export iOS gera `Builds/iOS/DungeonCrawlerXcode` em um Mac.
