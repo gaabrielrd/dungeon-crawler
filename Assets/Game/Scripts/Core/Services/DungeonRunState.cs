@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using DungeonCrawler.Combat;
 using DungeonCrawler.Core.Events;
 using DungeonCrawler.Core.Services;
+using DungeonCrawler.Data.State;
 using DungeonCrawler.Dungeon;
 using DungeonCrawler.Economy;
 
@@ -16,6 +17,7 @@ namespace DungeonCrawler.Core.Services
         public int currentFloor;
         public string currentThemeId;
         public List<CombatantState> party;
+        public List<HeroState> roster;
         public SaveProfileSnapshot inventorySnapshot;
         public HashSet<int> visitedFloors;
         public GeneratedFloor currentFloorInfo;
@@ -53,6 +55,12 @@ namespace DungeonCrawler.Core.Services
         {
             get => party;
             set => party = value;
+        }
+
+        public List<HeroState> Roster
+        {
+            get => roster;
+            set => roster = value;
         }
 
         public SaveProfileSnapshot InventorySnapshot
@@ -112,6 +120,27 @@ namespace DungeonCrawler.Core.Services
                 currentFloor = 1,
                 currentThemeId = "crypt",
                 party = party == null ? new List<CombatantState>() : new List<CombatantState>(party),
+                roster = new List<HeroState>(),
+                inventorySnapshot = new SaveProfileSnapshot(),
+                visitedFloors = new HashSet<int>(),
+                startedAtUtc = DateTime.UtcNow.ToString("O"),
+                status = DungeonRunStatus.NotStarted,
+                lastCombatResult = CombatState.Initializing,
+                canAdvanceFloor = false,
+                lastResolvedReward = null
+            };
+        }
+
+        public static DungeonRunState CreateNew(string seed, List<HeroState> roster, List<CombatantState> party)
+        {
+            return new DungeonRunState
+            {
+                runId = Guid.NewGuid().ToString(),
+                seed = seed ?? Guid.NewGuid().ToString(),
+                currentFloor = 1,
+                currentThemeId = "crypt",
+                party = party == null ? new List<CombatantState>() : new List<CombatantState>(party),
+                roster = roster == null ? new List<HeroState>() : new List<HeroState>(roster),
                 inventorySnapshot = new SaveProfileSnapshot(),
                 visitedFloors = new HashSet<int>(),
                 startedAtUtc = DateTime.UtcNow.ToString("O"),
@@ -137,6 +166,11 @@ namespace DungeonCrawler.Core.Services
             if (party == null)
             {
                 party = new List<CombatantState>();
+            }
+
+            if (roster == null)
+            {
+                roster = new List<HeroState>();
             }
 
             if (inventorySnapshot == null)
