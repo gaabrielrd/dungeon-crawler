@@ -522,7 +522,7 @@ namespace DungeonCrawler.UI
             EnsureCanvasScaler();
 
             var rootLayout = _runtimeRoot.gameObject.AddComponent<VerticalLayoutGroup>();
-            rootLayout.padding = new RectOffset(6, 6, 6, 6);
+            rootLayout.padding = new RectOffset(6, 6, 50, 6);
             rootLayout.spacing = 6;
             rootLayout.childControlHeight = true;
             rootLayout.childControlWidth = true;
@@ -534,7 +534,7 @@ namespace DungeonCrawler.UI
             var battlefield = CreateRectTransform("Battlefield", _runtimeRoot);
             var battlefieldLayout = battlefield.gameObject.AddComponent<HorizontalLayoutGroup>();
             battlefieldLayout.spacing = 4;
-            battlefieldLayout.childAlignment = TextAnchor.UpperCenter;
+            battlefieldLayout.childAlignment = TextAnchor.MiddleCenter;
             battlefieldLayout.childControlHeight = true;
             battlefieldLayout.childControlWidth = true;
             battlefieldLayout.childForceExpandHeight = true;
@@ -543,8 +543,7 @@ namespace DungeonCrawler.UI
             var battlefieldSize = battlefield.gameObject.AddComponent<LayoutElement>();
             battlefieldSize.flexibleHeight = 1;
 
-            CreateSideSection("Party", CombatSide.Player, _playerSlots, battlefield);
-            CreateSideSection("Enemies", CombatSide.Enemy, _enemySlots, battlefield);
+            CreateAllCharacterSlots(battlefield);
 
             CreateBottomActionBar();
             CreateResultOverlay();
@@ -552,66 +551,48 @@ namespace DungeonCrawler.UI
             _isUiReady = true;
         }
 
-        private void CreateSideSection(string title, CombatSide side, List<CombatantSlotView> target, Transform parent)
+        private void CreateAllCharacterSlots(Transform parent)
         {
-            var section = CreatePanel(title + " Section", parent, new Color(0.12f, 0.13f, 0.17f, 0.82f));
-            var layout = section.gameObject.AddComponent<VerticalLayoutGroup>();
-            layout.padding = new RectOffset(4, 4, 4, 4);
-            layout.spacing = 4;
-            layout.childControlHeight = true;
-            layout.childControlWidth = true;
-            layout.childForceExpandHeight = true;
-
-            var sectionSize = section.gameObject.AddComponent<LayoutElement>();
-            sectionSize.flexibleHeight = 1;
-            sectionSize.flexibleWidth = 1;
-
-            CreateLabel(title, section, 16, TextAnchor.MiddleLeft);
-
-            var gridRoot = CreateRectTransform(title + " Grid", section);
-            var gridLayout = gridRoot.gameObject.AddComponent<VerticalLayoutGroup>();
-            gridLayout.spacing = 6;
-            gridLayout.childControlHeight = true;
-            gridLayout.childControlWidth = true;
-            gridLayout.childForceExpandHeight = true;
-            gridLayout.childForceExpandWidth = true;
-
-            var gridSize = gridRoot.gameObject.AddComponent<LayoutElement>();
-            gridSize.flexibleHeight = 1;
-            gridSize.flexibleWidth = 1;
-
             for (var rank = 1; rank <= CombatRank.MaxCombatantsPerSide; rank++)
             {
-                var slotRoot = CreatePanel($"{side} Slot {rank}", gridRoot, EmptySlotColor);
-                var layoutElement = slotRoot.gameObject.AddComponent<LayoutElement>();
-                layoutElement.flexibleWidth = 1;
-                layoutElement.flexibleHeight = 1;
-                layoutElement.minHeight = 100;
-
-                var button = slotRoot.gameObject.AddComponent<Button>();
-                button.transition = Selectable.Transition.ColorTint;
-                button.targetGraphic = slotRoot.GetComponent<Image>();
-
-                var slotLayout = slotRoot.gameObject.AddComponent<VerticalLayoutGroup>();
-                slotLayout.padding = new RectOffset(2, 2, 1, 2);
-                slotLayout.spacing = 1;
-                slotLayout.childAlignment = TextAnchor.UpperCenter;
-                slotLayout.childControlHeight = true;
-                slotLayout.childControlWidth = true;
-                slotLayout.childForceExpandHeight = true;
-                slotLayout.childForceExpandWidth = true;
-
-                var portraitImage = CreatePortrait(slotLayout.transform);
-
-                var nameText = CreateLabel($"R{rank}", slotLayout.transform, 11, TextAnchor.MiddleCenter);
-                var hpText = CreateLabel("HP --/--", slotLayout.transform, 10, TextAnchor.MiddleCenter);
-                var statusText = CreateLabel(side == CombatSide.Player ? "P" : "E", slotLayout.transform, 9, TextAnchor.MiddleCenter);
-                statusText.color = new Color(1f, 1f, 1f, 0.9f);
-
-                var slot = new CombatantSlotView(side, rank, slotRoot, button, portraitImage, nameText, hpText, statusText);
-                button.onClick.AddListener(() => OnCombatantSlotClicked(slot));
-                target.Add(slot);
+                CreateSingleSlot($"Player Slot {rank}", CombatSide.Player, rank, _playerSlots, parent);
             }
+            for (var rank = 1; rank <= CombatRank.MaxCombatantsPerSide; rank++)
+            {
+                CreateSingleSlot($"Enemy Slot {rank}", CombatSide.Enemy, rank, _enemySlots, parent);
+            }
+        }
+
+        private void CreateSingleSlot(string name, CombatSide side, int rank, List<CombatantSlotView> target, Transform parent)
+        {
+            var slotRoot = CreateRectTransform(name, parent);
+            var layoutElement = slotRoot.gameObject.AddComponent<LayoutElement>();
+            layoutElement.flexibleWidth = 1;
+            layoutElement.flexibleHeight = 1;
+            layoutElement.minHeight = 100;
+
+            var slotImage = slotRoot.gameObject.AddComponent<Image>();
+            slotImage.color = EmptySlotColor;
+
+            var button = slotRoot.gameObject.AddComponent<Button>();
+            button.transition = Selectable.Transition.ColorTint;
+            button.targetGraphic = slotImage;
+
+            var slotLayout = slotRoot.gameObject.AddComponent<VerticalLayoutGroup>();
+            slotLayout.padding = new RectOffset(2, 2, 1, 2);
+            slotLayout.spacing = 1;
+            slotLayout.childAlignment = TextAnchor.MiddleCenter;
+            slotLayout.childControlHeight = true;
+            slotLayout.childControlWidth = true;
+            slotLayout.childForceExpandHeight = true;
+            slotLayout.childForceExpandWidth = true;
+
+            var portraitImage = CreatePortrait(slotLayout.transform);
+            var hpText = CreateLabel("HP --/--", slotLayout.transform, 10, TextAnchor.MiddleCenter);
+
+            var slot = new CombatantSlotView(side, rank, slotRoot, button, portraitImage, null, hpText, null);
+            button.onClick.AddListener(() => OnCombatantSlotClicked(slot));
+            target.Add(slot);
         }
 
         private static Image CreatePortrait(Transform parent)
@@ -652,7 +633,7 @@ namespace DungeonCrawler.UI
 
         private void CreateStatusHeader()
         {
-            var section = CreatePanel("Status Header", _runtimeRoot, new Color(0.08f, 0.09f, 0.12f, 0.9f));
+            var section = CreateRectTransform("Status Header", _runtimeRoot);
             var layout = section.gameObject.AddComponent<VerticalLayoutGroup>();
             layout.padding = new RectOffset(16, 16, 12, 12);
             layout.spacing = 6;
@@ -661,15 +642,15 @@ namespace DungeonCrawler.UI
             layout.childForceExpandHeight = false;
 
             var sectionSize = section.gameObject.AddComponent<LayoutElement>();
-            sectionSize.preferredHeight = 120;
+            sectionSize.preferredHeight = 100;
 
-            _turnText = CreateLabel("Turn: --", section, 30, TextAnchor.MiddleCenter);
-            _statusText = CreateLabel("Waiting combat start...", section, 22, TextAnchor.MiddleCenter);
+            _turnText = CreateLabel("Turn: --", section, 24, TextAnchor.MiddleCenter);
+            _statusText = CreateLabel("Waiting combat start...", section, 18, TextAnchor.MiddleCenter);
         }
 
         private void CreateBottomActionBar()
         {
-            var section = CreatePanel("Bottom Action Bar", _runtimeRoot, new Color(0.08f, 0.09f, 0.12f, 0.9f));
+            var section = CreateRectTransform("Bottom Action Bar", _runtimeRoot);
             var layout = section.gameObject.AddComponent<HorizontalLayoutGroup>();
             layout.padding = new RectOffset(16, 16, 12, 12);
             layout.spacing = 12;
@@ -688,7 +669,7 @@ namespace DungeonCrawler.UI
 
         private void CreateResultOverlay()
         {
-            var overlay = CreatePanel("Result Overlay", _runtimeRoot, new Color(0f, 0f, 0f, 0.82f));
+            var overlay = CreateRectTransform("Result Overlay", _runtimeRoot);
             StretchToFill(overlay);
             overlay.SetAsLastSibling();
             var overlayLayoutElement = overlay.gameObject.AddComponent<LayoutElement>();
@@ -1292,10 +1273,9 @@ namespace DungeonCrawler.UI
             {
                 if (Combatant == null)
                 {
-                    _name.text = $"Rank {Rank}: Empty";
+                    if (_name != null) _name.text = $"Rank {Rank}: Empty";
                     _hp.text = "HP --/--";
-                    _status.text = "No combatant";
-                    _status.color = DisabledTextColor;
+                    if (_status != null) { _status.text = "No combatant"; _status.color = DisabledTextColor; }
                     _background.color = EmptySlotColor;
                     _button.interactable = false;
                     _portrait.sprite = null;
@@ -1303,10 +1283,9 @@ namespace DungeonCrawler.UI
                     return;
                 }
 
-                _name.text = $"R{Combatant.Rank} {Combatant.DisplayName}";
+                if (_name != null) _name.text = $"R{Combatant.Rank} {Combatant.DisplayName}";
                 _hp.text = $"HP {Combatant.CurrentHp}/{Combatant.MaxHp}";
-                _status.text = Combatant.IsAlive ? "Alive" : "Defeated";
-                _status.color = Combatant.IsAlive ? EnabledTextColor : DisabledTextColor;
+                if (_status != null) { _status.text = Combatant.IsAlive ? "Alive" : "Defeated"; _status.color = Combatant.IsAlive ? EnabledTextColor : DisabledTextColor; }
 
                 _portrait.sprite = Portrait;
                 _portrait.color = Portrait == null
