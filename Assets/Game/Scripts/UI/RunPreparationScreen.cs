@@ -1,3 +1,6 @@
+using System;
+using DungeonCrawler.Core.Services;
+using DungeonCrawler.Data.Definitions;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -8,6 +11,7 @@ namespace DungeonCrawler.UI
         [SerializeField] private ScreenNavigator navigator;
         [SerializeField] private Button startCombatButton;
         [SerializeField] private Button backButton;
+        [SerializeField] private DungeonThemeDefinition themeDefinition;
 
         private void Awake()
         {
@@ -26,7 +30,7 @@ namespace DungeonCrawler.UI
 
             if (startCombatButton != null)
             {
-                startCombatButton.onClick.AddListener(navigator.GoToCombatPrototype);
+                startCombatButton.onClick.AddListener(OnStartCombatPressed);
             }
 
             if (backButton != null)
@@ -44,7 +48,7 @@ namespace DungeonCrawler.UI
 
             if (startCombatButton != null)
             {
-                startCombatButton.onClick.RemoveListener(navigator.GoToCombatPrototype);
+                startCombatButton.onClick.RemoveListener(OnStartCombatPressed);
             }
 
             if (backButton != null)
@@ -59,6 +63,32 @@ namespace DungeonCrawler.UI
             {
                 navigator = GetComponent<ScreenNavigator>();
             }
+        }
+
+        private async void OnStartCombatPressed()
+        {
+            if (ServiceRegistry.TryResolve<IDungeonRunService>(out var dungeonRunService))
+            {
+                try
+                {
+                    if (dungeonRunService is DungeonRunService concreteService && themeDefinition != null)
+                    {
+                        concreteService.CurrentThemeDefinition = themeDefinition;
+                    }
+
+                    if (!dungeonRunService.HasActiveRun)
+                    {
+                        await dungeonRunService.StartRunAsync();
+                    }
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogException(exception, this);
+                    return;
+                }
+            }
+
+            navigator.GoToCombatPrototype();
         }
     }
 }

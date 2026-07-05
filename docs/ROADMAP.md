@@ -25,7 +25,7 @@ GitHub + Codex
 |---|---|---|
 | Sprint 0 | Fundação técnica e builds mobile. | Implemented parcial |
 | Sprint 1 | Protótipo de combate. | Implemented parcial |
-| Sprint 2 | Dungeon run procedural. | Planned |
+| Sprint 2 | Dungeon run procedural. | Implemented inicial |
 | Sprint 3 | Sistemas RPG. | Planned |
 | Sprint 4 | Conta, save local e cloud save. | Implemented parcial |
 | Sprint 5 | Monetização com ads e IAP. | Planned |
@@ -171,6 +171,10 @@ Primeiro fluxo de avançar andar
 
 Status: Implemented inicial.
 
+Status atual: run inicia no andar 1 com `GeneratedFloor`, floors de combate podem iniciar
+`CombatController` pela run ativa, vitória libera `Next Floor`, derrota marca a run como
+`Failed`, e a recompensa pós-combate ainda e um placeholder de UI.
+
 ### Tarefas
 
 ```text
@@ -200,6 +204,9 @@ Andar 10 gera boss e depois resting site.
 Andar 20 troca tema após boss/resting site.
 Mesma seed gera sequência reproduzível.
 ```
+
+Status atual: os dois primeiros critérios estao implementados no fluxo de prototipo; boss,
+resting site e transicao de tema continuam dependentes de conteudo/fluxos futuros.
 
 ---
 

@@ -455,7 +455,7 @@ RemoteConfigService
 
 | Etapa | Status |
 |---|---|
-| CombatScene recebe EncounterDefinition + PartyState | Planned |
+| CombatScene recebe EncounterDefinition + PartyState | Implemented inicial (CombatPrototype consome run ativa e dados de teste) |
 | CombatController cria/recebe CombatantStates | Implemented parcial |
 | TurnManager calcula ordem inicial | Implemented |
 | UI renderiza estado | Implemented inicial |
@@ -468,8 +468,8 @@ RemoteConfigService
 | TurnManager avança turno | Implemented |
 | AI decide ações dos inimigos | Implemented inicial (ataque básico em alvo vivo aleatório) |
 | Verificar morte, vitória e derrota | Implemented |
-| CombatRewardResolver gera recompensa | Planned |
-| DungeonRunService avança estado da run | Planned |
+| CombatRewardResolver gera recompensa | Planned (overlay de Rewards ainda e placeholder) |
+| DungeonRunService avança estado da run | Implemented inicial |
 | SaveService salva snapshot | Planned |
 
 ---

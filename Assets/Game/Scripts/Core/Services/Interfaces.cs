@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using DungeonCrawler.Combat;
+using DungeonCrawler.Dungeon;
 
 namespace DungeonCrawler.Core.Services
 {
@@ -48,6 +49,8 @@ namespace DungeonCrawler.Core.Services
 
         DungeonRunState ActiveRun { get; }
 
+        CombatController CurrentCombatController { get; }
+
         Task<DungeonRunState> StartRunAsync(string seed = null, List<CombatantState> party = null);
 
         Task AbandonRunAsync(string runId);
@@ -55,6 +58,12 @@ namespace DungeonCrawler.Core.Services
         Task CompleteRunAsync(string runId, Dictionary<string, object> rewards);
 
         Task<DungeonRunState> LoadRunAsync(string runId);
+
+        GeneratedFloor GenerateCurrentFloor();
+
+        CombatController StartCurrentFloorCombat(CombatFormationState formation);
+
+        void ResolveCurrentCombatResult(CombatState result);
 
         void AdvanceFloor();
 

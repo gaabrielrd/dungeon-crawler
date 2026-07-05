@@ -19,6 +19,9 @@ namespace DungeonCrawler.Core.Services
         public HashSet<int> visitedFloors;
         public GeneratedFloor currentFloorInfo;
         public string startedAtUtc;
+        public DungeonRunStatus status;
+        public CombatState lastCombatResult;
+        public bool canAdvanceFloor;
 
         public string RunId
         {
@@ -74,6 +77,24 @@ namespace DungeonCrawler.Core.Services
             set => startedAtUtc = value;
         }
 
+        public DungeonRunStatus Status
+        {
+            get => status;
+            set => status = value;
+        }
+
+        public CombatState LastCombatResult
+        {
+            get => lastCombatResult;
+            set => lastCombatResult = value;
+        }
+
+        public bool CanAdvanceFloor
+        {
+            get => canAdvanceFloor;
+            set => canAdvanceFloor = value;
+        }
+
         public static DungeonRunState CreateNew(string seed, List<CombatantState> party)
         {
             return new DungeonRunState
@@ -82,10 +103,13 @@ namespace DungeonCrawler.Core.Services
                 seed = seed ?? Guid.NewGuid().ToString(),
                 currentFloor = 1,
                 currentThemeId = "crypt",
-                party = new List<CombatantState>(party),
+                party = party == null ? new List<CombatantState>() : new List<CombatantState>(party),
                 inventorySnapshot = new SaveProfileSnapshot(),
-                visitedFloors = new HashSet<int> { 1 },
-                startedAtUtc = DateTime.UtcNow.ToString("O")
+                visitedFloors = new HashSet<int>(),
+                startedAtUtc = DateTime.UtcNow.ToString("O"),
+                status = DungeonRunStatus.NotStarted,
+                lastCombatResult = CombatState.Initializing,
+                canAdvanceFloor = false
             };
         }
 
@@ -114,6 +138,11 @@ namespace DungeonCrawler.Core.Services
             if (visitedFloors == null)
             {
                 visitedFloors = new HashSet<int>();
+            }
+
+            if (status == default && currentFloor > 0)
+            {
+                status = DungeonRunStatus.Exploring;
             }
         }
 

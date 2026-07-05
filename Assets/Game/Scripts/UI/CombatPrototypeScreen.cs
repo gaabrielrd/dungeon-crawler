@@ -24,6 +24,7 @@ namespace DungeonCrawler.UI
         private CombatController _combatController;
         private CombatFormationState _formation;
         private IEventBus _eventBus;
+        private IDungeonRunService _dungeonRunService;
         private bool _subscribedToEvents;
         private bool _awaitingTargetSelection;
         private bool _isUiReady;
@@ -36,6 +37,7 @@ namespace DungeonCrawler.UI
         private Text _statusText;
         private Text _resultText;
         private Button _basicAttackButton;
+        private Button _nextFloorButton;
         private readonly List<CombatantSlotView> _playerSlots = new List<CombatantSlotView>();
         private readonly List<CombatantSlotView> _enemySlots = new List<CombatantSlotView>();
         private readonly Dictionary<CombatantState, CombatantSlotView> _slotsByCombatant = new Dictionary<CombatantState, CombatantSlotView>();
@@ -86,6 +88,11 @@ namespace DungeonCrawler.UI
             if (_basicAttackButton != null)
             {
                 _basicAttackButton.onClick.RemoveListener(OnBasicAttackPressed);
+            }
+
+            if (_nextFloorButton != null)
+            {
+                _nextFloorButton.onClick.RemoveListener(OnNextFloorPressed);
             }
 
             UnsubscribeFromCombatEvents();
@@ -208,15 +215,27 @@ namespace DungeonCrawler.UI
                 return;
             }
 
+            ServiceRegistry.TryResolve<IDungeonRunService>(out _dungeonRunService);
+            ConfigureRunThemeFromTestDataIfNeeded();
+
             _formation = CreateDefaultFormation();
-            _combatController = new CombatController(_formation, _eventBus);
             BindFormationToSlots();
             SetResultVisible(false, string.Empty);
             _statusText.text = "Tap Basic Attack, then tap a valid enemy target.";
 
             try
             {
-                _combatController.StartCombat();
+                if (_dungeonRunService != null && _dungeonRunService.HasActiveRun)
+                {
+                    _combatController = _dungeonRunService.CurrentCombatController
+                        ?? _dungeonRunService.StartCurrentFloorCombat(_formation);
+                }
+                else
+                {
+                    _combatController = new CombatController(_formation, _eventBus);
+                    _combatController.StartCombat();
+                }
+
                 _isCombatInitialized = true;
                 RefreshAllVisuals();
             }
@@ -227,9 +246,37 @@ namespace DungeonCrawler.UI
             }
         }
 
+        private void ConfigureRunThemeFromTestDataIfNeeded()
+        {
+            if (_dungeonRunService is not DungeonRunService concreteService
+                || !_dungeonRunService.HasActiveRun
+                || concreteService.CurrentThemeDefinition != null
+                || testData == null
+                || testData.EnemyDefinitions.Length == 0
+                || testData.EnemyDefinitions[0] == null
+                || testData.EnemyDefinitions[0].Theme == null)
+            {
+                return;
+            }
+
+            concreteService.CurrentThemeDefinition = testData.EnemyDefinitions[0].Theme;
+            if (_dungeonRunService.ActiveRun.CurrentFloorInfo == null
+                || _dungeonRunService.ActiveRun.CurrentFloorInfo.Encounter == null)
+            {
+                _dungeonRunService.GenerateCurrentFloor();
+            }
+        }
+
         private CombatFormationState CreateDefaultFormation()
         {
             var formation = new CombatFormationState();
+
+            if (_dungeonRunService != null && _dungeonRunService.HasActiveRun)
+            {
+                AddRunPartyOrFallbackHeroes(formation);
+                AddRunEncounterOrFallbackEnemies(formation);
+                return formation;
+            }
 
             if (testData != null && testData.HeroDefinitions.Length >= 4 && testData.EnemyDefinitions.Length >= 1)
             {
@@ -257,6 +304,122 @@ namespace DungeonCrawler.UI
             }
 
             return formation;
+        }
+
+        private void AddRunPartyOrFallbackHeroes(CombatFormationState formation)
+        {
+            var party = _dungeonRunService.ActiveRun.Party;
+            if (party != null && party.Count > 0)
+            {
+                for (var index = 0; index < party.Count; index++)
+                {
+                    formation.AddCombatant(party[index]);
+                }
+
+                return;
+            }
+
+            if (testData != null && testData.HeroDefinitions.Length >= 4)
+            {
+                formation.AddCombatant(CombatantStateFactory.CreateHero(testData.HeroDefinitions[0], 1));
+                formation.AddCombatant(CombatantStateFactory.CreateHero(testData.HeroDefinitions[1], 2));
+                formation.AddCombatant(CombatantStateFactory.CreateHero(testData.HeroDefinitions[2], 3));
+                formation.AddCombatant(CombatantStateFactory.CreateHero(testData.HeroDefinitions[3], 4));
+                _dungeonRunService.ActiveRun.Party = new List<CombatantState>
+                {
+                    FindCombatantInFormation(formation, CombatSide.Player, 1),
+                    FindCombatantInFormation(formation, CombatSide.Player, 2),
+                    FindCombatantInFormation(formation, CombatSide.Player, 3),
+                    FindCombatantInFormation(formation, CombatSide.Player, 4)
+                };
+                return;
+            }
+
+            formation.AddCombatant(CreateCombatant("hero_front", "Knight", CombatSide.Player, 1, 28, 8, 4, 9));
+            formation.AddCombatant(CreateCombatant("hero_mid", "Ranger", CombatSide.Player, 2, 22, 10, 2, 12));
+            formation.AddCombatant(CreateCombatant("hero_back", "Mage", CombatSide.Player, 3, 18, 11, 1, 11));
+            formation.AddCombatant(CreateCombatant("hero_support", "Cleric", CombatSide.Player, 4, 24, 6, 3, 8));
+            _dungeonRunService.ActiveRun.Party = new List<CombatantState>
+            {
+                FindCombatantInFormation(formation, CombatSide.Player, 1),
+                FindCombatantInFormation(formation, CombatSide.Player, 2),
+                FindCombatantInFormation(formation, CombatSide.Player, 3),
+                FindCombatantInFormation(formation, CombatSide.Player, 4)
+            };
+        }
+
+        private void AddRunEncounterOrFallbackEnemies(CombatFormationState formation)
+        {
+            var enemy = ResolveEnemyDefinitionForCurrentFloor();
+            if (enemy != null)
+            {
+                AddEnemyDefinitionToFormation(formation, enemy);
+                return;
+            }
+
+            formation.AddCombatant(CreateCombatant("enemy_brute", "Brute", CombatSide.Enemy, 1, 30, 7, 3, 7));
+            formation.AddCombatant(CreateCombatant("enemy_raider", "Raider", CombatSide.Enemy, 2, 20, 8, 2, 10));
+            formation.AddCombatant(CreateCombatant("enemy_shaman", "Shaman", CombatSide.Enemy, 3, 16, 9, 1, 11));
+            formation.AddCombatant(CreateCombatant("enemy_guard", "Guard", CombatSide.Enemy, 4, 25, 6, 4, 6));
+        }
+
+        private EnemyDefinition ResolveEnemyDefinitionForCurrentFloor()
+        {
+            if (testData == null || testData.EnemyDefinitions.Length == 0)
+            {
+                return null;
+            }
+
+            var encounter = _dungeonRunService.ActiveRun.CurrentFloorInfo?.Encounter;
+            if (encounter != null)
+            {
+                var resolved = testData.GetEnemy(encounter.DefinitionId);
+                if (resolved != null)
+                {
+                    return resolved;
+                }
+            }
+
+            return testData.EnemyDefinitions[0];
+        }
+
+        private static void AddEnemyDefinitionToFormation(CombatFormationState formation, EnemyDefinition enemy)
+        {
+            var occupiedRanks = enemy.OccupiedRanks;
+            if (occupiedRanks != null && occupiedRanks.Length > 0)
+            {
+                for (var index = 0; index < occupiedRanks.Length; index++)
+                {
+                    var rank = occupiedRanks[index];
+                    if (rank >= CombatRank.Front && rank <= CombatRank.Back && !formation.ContainsRank(CombatSide.Enemy, rank))
+                    {
+                        formation.AddCombatant(CombatantStateFactory.CreateEnemy(enemy, rank));
+                    }
+                }
+            }
+
+            if (formation.CountSide(CombatSide.Enemy) == 0)
+            {
+                formation.AddCombatant(CombatantStateFactory.CreateEnemy(enemy, 1));
+            }
+        }
+
+        private static CombatantState FindCombatantInFormation(
+            CombatFormationState formation,
+            CombatSide side,
+            int rank)
+        {
+            var combatants = formation.Combatants;
+            for (var index = 0; index < combatants.Count; index++)
+            {
+                var combatant = combatants[index];
+                if (combatant.Side == side && combatant.Rank == rank)
+                {
+                    return combatant;
+                }
+            }
+
+            return null;
         }
 
         private static CombatantState CreateCombatant(
@@ -492,6 +655,7 @@ namespace DungeonCrawler.UI
             _resultText.resizeTextForBestFit = true;
             _resultText.resizeTextMinSize = 22;
             _resultText.resizeTextMaxSize = 52;
+            _nextFloorButton = CreateTextButton("Next Floor", overlay, OnNextFloorPressed);
             overlay.gameObject.SetActive(false);
         }
 
@@ -723,7 +887,15 @@ namespace DungeonCrawler.UI
         {
             _awaitingTargetSelection = false;
             RefreshAllVisuals();
-            SetResultVisible(true, gameEvent.ResultState == CombatState.Victory ? "Victory" : "Defeat");
+            if (gameEvent.ResultState == CombatState.Victory)
+            {
+                SetResultVisible(true, "Rewards", _dungeonRunService != null
+                    && _dungeonRunService.HasActiveRun
+                    && _dungeonRunService.ActiveRun.CanAdvanceFloor);
+                return;
+            }
+
+            SetResultVisible(true, "Run Failed");
         }
 
         private void RefreshAllVisuals()
@@ -794,7 +966,7 @@ namespace DungeonCrawler.UI
             _basicAttackButton.interactable = playerCanAct && !_awaitingTargetSelection;
         }
 
-        private void SetResultVisible(bool visible, string text)
+        private void SetResultVisible(bool visible, string text, bool showNextFloor = false)
         {
             if (_resultText == null)
             {
@@ -803,6 +975,36 @@ namespace DungeonCrawler.UI
 
             _resultText.transform.parent.gameObject.SetActive(visible);
             _resultText.text = text;
+
+            if (_nextFloorButton != null)
+            {
+                _nextFloorButton.gameObject.SetActive(visible && showNextFloor);
+                _nextFloorButton.interactable = visible && showNextFloor;
+            }
+        }
+
+        private void OnNextFloorPressed()
+        {
+            if (_dungeonRunService == null || !_dungeonRunService.HasActiveRun)
+            {
+                return;
+            }
+
+            try
+            {
+                _dungeonRunService.AdvanceFloor();
+                _combatController = null;
+                _formation = null;
+                _isCombatInitialized = false;
+                _awaitingTargetSelection = false;
+                SetResultVisible(false, string.Empty);
+                InitializeCombat();
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception, this);
+                _statusText.text = "Failed to advance floor.";
+            }
         }
 
         private static RectTransform CreateRectTransform(string name, Transform parent)

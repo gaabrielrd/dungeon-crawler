@@ -1,5 +1,7 @@
 using System.Threading.Tasks;
+using DungeonCrawler.Combat;
 using DungeonCrawler.Core.Services;
+using DungeonCrawler.Dungeon;
 using DungeonCrawler.UI;
 using NUnit.Framework;
 using UnityEngine;
@@ -79,6 +81,30 @@ namespace DungeonCrawler.Tests.EditMode
             EnableFixture(fixture);
             startCombatButton.onClick.Invoke();
 
+            Assert.That(sceneLoader.LastLoadedSceneName, Is.EqualTo("CombatPrototype"));
+
+            DestroyFixture(fixture.Root, startCombatButton.gameObject, backButton.gameObject);
+        }
+
+        [Test]
+        public void RunPreparationStartCombatButtonStartsRunBeforeNavigating()
+        {
+            var sceneLoader = new MockSceneLoaderService();
+            var dungeonRunService = new MockDungeonRunService();
+            ServiceRegistry.Register<ISceneLoaderService>(sceneLoader);
+            ServiceRegistry.Register<IDungeonRunService>(dungeonRunService);
+
+            var fixture = CreateScreenFixture<RunPreparationScreen>();
+            var startCombatButton = CreateButton("Start Combat Button");
+            var backButton = CreateButton("Back Button");
+
+            SetObjectReference(fixture.Screen, "startCombatButton", startCombatButton);
+            SetObjectReference(fixture.Screen, "backButton", backButton);
+
+            EnableFixture(fixture);
+            startCombatButton.onClick.Invoke();
+
+            Assert.That(dungeonRunService.StartRunCallCount, Is.EqualTo(1));
             Assert.That(sceneLoader.LastLoadedSceneName, Is.EqualTo("CombatPrototype"));
 
             DestroyFixture(fixture.Root, startCombatButton.gameObject, backButton.gameObject);
@@ -215,6 +241,82 @@ namespace DungeonCrawler.Tests.EditMode
             {
                 LastLoadedSceneName = sceneName;
                 return Task.CompletedTask;
+            }
+        }
+
+        private sealed class MockDungeonRunService : IDungeonRunService
+        {
+            public bool IsInitialized => true;
+
+            public bool HasActiveRun { get; private set; }
+
+            public DungeonRunState ActiveRun { get; private set; }
+
+            public CombatController CurrentCombatController => null;
+
+            public int StartRunCallCount { get; private set; }
+
+            public Task InitializeAsync()
+            {
+                return Task.CompletedTask;
+            }
+
+            public Task<DungeonRunState> StartRunAsync(string seed = null, System.Collections.Generic.List<CombatantState> party = null)
+            {
+                StartRunCallCount++;
+                ActiveRun = DungeonRunState.CreateNew(seed, party);
+                ActiveRun.Status = DungeonRunStatus.Exploring;
+                HasActiveRun = true;
+                return Task.FromResult(ActiveRun);
+            }
+
+            public Task AbandonRunAsync(string runId)
+            {
+                HasActiveRun = false;
+                ActiveRun = null;
+                return Task.CompletedTask;
+            }
+
+            public Task CompleteRunAsync(string runId, System.Collections.Generic.Dictionary<string, object> rewards)
+            {
+                HasActiveRun = false;
+                ActiveRun = null;
+                return Task.CompletedTask;
+            }
+
+            public Task<DungeonRunState> LoadRunAsync(string runId)
+            {
+                return Task.FromResult(ActiveRun);
+            }
+
+            public GeneratedFloor GenerateCurrentFloor()
+            {
+                return null;
+            }
+
+            public CombatController StartCurrentFloorCombat(CombatFormationState formation)
+            {
+                return null;
+            }
+
+            public void ResolveCurrentCombatResult(CombatState result)
+            {
+            }
+
+            public void AdvanceFloor()
+            {
+            }
+
+            public void AbandonCurrentRun()
+            {
+                HasActiveRun = false;
+                ActiveRun = null;
+            }
+
+            public void CompleteCurrentRun(System.Collections.Generic.Dictionary<string, object> rewards)
+            {
+                HasActiveRun = false;
+                ActiveRun = null;
             }
         }
     }
