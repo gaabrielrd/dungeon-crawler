@@ -6,12 +6,14 @@ using DungeonCrawler.Core.Events;
 using DungeonCrawler.Core.Services;
 using DungeonCrawler.Data.Definitions;
 using DungeonCrawler.Dungeon;
+using DungeonCrawler.Economy;
 
 namespace DungeonCrawler.Core.Services
 {
     public sealed class DungeonRunService : IDungeonRunService
     {
         private readonly IEventBus _eventBus;
+        private readonly RewardResolver _rewardResolver = new RewardResolver();
 
         public DungeonRunService(IEventBus eventBus)
         {
@@ -28,6 +30,8 @@ namespace DungeonCrawler.Core.Services
         public CombatController CurrentCombatController { get; private set; }
 
         public DungeonThemeDefinition CurrentThemeDefinition { get; set; }
+
+        public RewardDefinition CurrentRewardDefinition { get; set; }
 
         public async Task InitializeAsync()
         {
@@ -105,7 +109,8 @@ namespace DungeonCrawler.Core.Services
                 startedAtUtc = DateTime.UtcNow.AddDays(-2).ToString("O"),
                 status = DungeonRunStatus.Exploring,
                 lastCombatResult = CombatState.Initializing,
-                canAdvanceFloor = false
+                canAdvanceFloor = false,
+                lastResolvedReward = null
             };
 
             return run;
@@ -198,6 +203,7 @@ namespace DungeonCrawler.Core.Services
 
             if (result == CombatState.Victory)
             {
+                ResolveAndApplyVictoryReward();
                 ActiveRun.VisitedFloors.Add(ActiveRun.CurrentFloor);
                 ActiveRun.Status = DungeonRunStatus.FloorResolved;
                 ActiveRun.CanAdvanceFloor = true;
@@ -228,6 +234,7 @@ namespace DungeonCrawler.Core.Services
             ActiveRun.Status = DungeonRunStatus.Exploring;
             ActiveRun.LastCombatResult = CombatState.Initializing;
             ActiveRun.CanAdvanceFloor = false;
+            ActiveRun.LastResolvedReward = null;
             CurrentCombatController = null;
 
             _eventBus.Publish(new FloorAdvancedEvent(ActiveRun.RunId, ActiveRun.CurrentFloor, ActiveRun.CurrentThemeId));
@@ -272,6 +279,71 @@ namespace DungeonCrawler.Core.Services
             }
 
             return generated;
+        }
+
+        private void ResolveAndApplyVictoryReward()
+        {
+            if (ActiveRun.LastResolvedReward != null)
+            {
+                return;
+            }
+
+            if (ActiveRun.InventorySnapshot == null)
+            {
+                ActiveRun.InventorySnapshot = new SaveProfileSnapshot();
+            }
+
+            ActiveRun.InventorySnapshot.Normalize();
+            var context = CreateRewardContext();
+            var reward = _rewardResolver.Resolve(context, CurrentRewardDefinition);
+
+            ActiveRun.InventorySnapshot.SoftCurrency += reward.SoftCurrency;
+            for (var index = 0; index < reward.ItemRewards.Count; index++)
+            {
+                var item = reward.ItemRewards[index];
+                ActiveRun.InventorySnapshot.AddItem(item.ItemId, item.Quantity);
+            }
+
+            ActiveRun.LastResolvedReward = reward;
+            ApplyRewardToSave(reward);
+        }
+
+        private RewardContext CreateRewardContext()
+        {
+            var floor = ActiveRun.CurrentFloorInfo;
+            var floorType = floor?.PrimaryType ?? FloorType.Combat;
+            var encounterType = floor?.Encounter?.EncounterType ?? MapEncounterType(floorType);
+            var localSeed = floor?.LocalSeed ?? 0;
+
+            return new RewardContext(
+                ActiveRun.Seed,
+                ActiveRun.CurrentFloor,
+                localSeed,
+                floorType,
+                encounterType);
+        }
+
+        private static EncounterType MapEncounterType(FloorType floorType)
+        {
+            return floorType == FloorType.Boss ? EncounterType.Boss : EncounterType.Common;
+        }
+
+        private static void ApplyRewardToSave(ResolvedReward reward)
+        {
+            if (reward == null || reward.SoftCurrency <= 0)
+            {
+                return;
+            }
+
+            if (!ServiceRegistry.TryResolve<ISaveService>(out var saveService)
+                || saveService.Current == null
+                || saveService.Current.Profile == null)
+            {
+                return;
+            }
+
+            saveService.Current.Profile.SoftCurrency += reward.SoftCurrency;
+            saveService.SaveAsync(saveService.Current).GetAwaiter().GetResult();
         }
 
         private void OnCombatEnded(CombatEndedEvent gameEvent)

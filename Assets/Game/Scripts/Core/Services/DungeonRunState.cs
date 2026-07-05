@@ -4,6 +4,7 @@ using DungeonCrawler.Combat;
 using DungeonCrawler.Core.Events;
 using DungeonCrawler.Core.Services;
 using DungeonCrawler.Dungeon;
+using DungeonCrawler.Economy;
 
 namespace DungeonCrawler.Core.Services
 {
@@ -22,6 +23,7 @@ namespace DungeonCrawler.Core.Services
         public DungeonRunStatus status;
         public CombatState lastCombatResult;
         public bool canAdvanceFloor;
+        public ResolvedReward lastResolvedReward;
 
         public string RunId
         {
@@ -95,6 +97,12 @@ namespace DungeonCrawler.Core.Services
             set => canAdvanceFloor = value;
         }
 
+        public ResolvedReward LastResolvedReward
+        {
+            get => lastResolvedReward;
+            set => lastResolvedReward = value;
+        }
+
         public static DungeonRunState CreateNew(string seed, List<CombatantState> party)
         {
             return new DungeonRunState
@@ -109,7 +117,8 @@ namespace DungeonCrawler.Core.Services
                 startedAtUtc = DateTime.UtcNow.ToString("O"),
                 status = DungeonRunStatus.NotStarted,
                 lastCombatResult = CombatState.Initializing,
-                canAdvanceFloor = false
+                canAdvanceFloor = false,
+                lastResolvedReward = null
             };
         }
 
@@ -135,6 +144,8 @@ namespace DungeonCrawler.Core.Services
                 inventorySnapshot = new SaveProfileSnapshot();
             }
 
+            inventorySnapshot.Normalize();
+
             if (visitedFloors == null)
             {
                 visitedFloors = new HashSet<int>();
@@ -150,6 +161,7 @@ namespace DungeonCrawler.Core.Services
         {
             currentFloor++;
             visitedFloors.Add(currentFloor);
+            lastResolvedReward = null;
         }
 
         public void ApplyFloorGeneration(GeneratedFloor floor)

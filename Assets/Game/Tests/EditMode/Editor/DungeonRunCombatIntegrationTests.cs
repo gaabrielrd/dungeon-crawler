@@ -6,6 +6,7 @@ using DungeonCrawler.Combat;
 using DungeonCrawler.Core.Events;
 using DungeonCrawler.Core.Services;
 using DungeonCrawler.Data.Definitions;
+using DungeonCrawler.Dungeon;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -15,9 +16,17 @@ namespace DungeonCrawler.Tests.EditMode
     {
         private readonly List<ScriptableObject> _definitions = new();
 
+        [SetUp]
+        public void SetUp()
+        {
+            ServiceRegistry.Clear();
+        }
+
         [TearDown]
         public void TearDown()
         {
+            ServiceRegistry.Clear();
+
             foreach (var definition in _definitions)
             {
                 if (definition != null)
@@ -75,6 +84,7 @@ namespace DungeonCrawler.Tests.EditMode
         public async Task Victory_ResolvesFloorAndAllowsAdvance()
         {
             var service = new DungeonRunService(new EventBus());
+            service.CurrentRewardDefinition = CreateRewardDefinition(10, 10, 40, 40);
             await service.StartRunAsync("seed");
             service.StartCurrentFloorCombat(CreateFormation());
 
@@ -83,18 +93,87 @@ namespace DungeonCrawler.Tests.EditMode
             Assert.That(service.ActiveRun.Status, Is.EqualTo(DungeonRunStatus.FloorResolved));
             Assert.That(service.ActiveRun.LastCombatResult, Is.EqualTo(CombatState.Victory));
             Assert.That(service.ActiveRun.CanAdvanceFloor, Is.True);
+            Assert.That(service.ActiveRun.LastResolvedReward, Is.Not.Null);
+            Assert.That(service.ActiveRun.InventorySnapshot.SoftCurrency, Is.EqualTo(10));
 
             service.AdvanceFloor();
 
             Assert.That(service.ActiveRun.CurrentFloor, Is.EqualTo(2));
             Assert.That(service.ActiveRun.Status, Is.EqualTo(DungeonRunStatus.Exploring));
             Assert.That(service.ActiveRun.CanAdvanceFloor, Is.False);
+            Assert.That(service.ActiveRun.LastResolvedReward, Is.Null);
+        }
+
+        [Test]
+        public async Task Victory_AppliesGoldToRegisteredSaveProfile()
+        {
+            var save = new FakeSaveService(SaveSnapshot.CreateNew("player"));
+            ServiceRegistry.Register<ISaveService>(save);
+            var service = new DungeonRunService(new EventBus());
+            service.CurrentRewardDefinition = CreateRewardDefinition(10, 10, 40, 40);
+            await service.StartRunAsync("seed");
+            service.StartCurrentFloorCombat(CreateFormation());
+
+            service.ResolveCurrentCombatResult(CombatState.Victory);
+
+            Assert.That(service.ActiveRun.InventorySnapshot.SoftCurrency, Is.EqualTo(10));
+            Assert.That(save.Current.Profile.SoftCurrency, Is.EqualTo(10));
+            Assert.That(save.SaveCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public async Task BossVictory_GrantsDifferentiatedReward()
+        {
+            var service = new DungeonRunService(new EventBus());
+            service.CurrentRewardDefinition = CreateRewardDefinition(10, 10, 40, 40);
+            var run = await service.StartRunAsync("seed");
+            run.CurrentFloor = 5;
+            service.GenerateCurrentFloor();
+            service.StartCurrentFloorCombat(CreateFormation());
+
+            service.ResolveCurrentCombatResult(CombatState.Victory);
+
+            Assert.That(service.ActiveRun.CurrentFloorInfo.PrimaryType, Is.EqualTo(FloorType.Boss));
+            Assert.That(service.ActiveRun.LastResolvedReward.IsBossReward, Is.True);
+            Assert.That(service.ActiveRun.InventorySnapshot.SoftCurrency, Is.EqualTo(40));
+        }
+
+        [Test]
+        public async Task Victory_AppliesResolvedItemToRunInventory()
+        {
+            var potion = CreateItemDefinition("item.test.potion", "Small Potion");
+            var service = new DungeonRunService(new EventBus());
+            service.CurrentRewardDefinition = CreateRewardDefinition(10, 10, 40, 40, potion);
+            await service.StartRunAsync("seed");
+            service.StartCurrentFloorCombat(CreateFormation());
+
+            service.ResolveCurrentCombatResult(CombatState.Victory);
+
+            Assert.That(service.ActiveRun.LastResolvedReward.ItemRewards.Count, Is.EqualTo(1));
+            Assert.That(service.ActiveRun.InventorySnapshot.ItemStacks.Count, Is.EqualTo(1));
+            Assert.That(service.ActiveRun.InventorySnapshot.ItemStacks[0].ItemId, Is.EqualTo("item.test.potion"));
+            Assert.That(service.ActiveRun.InventorySnapshot.ItemStacks[0].Quantity, Is.EqualTo(1));
+        }
+
+        [Test]
+        public async Task Victory_CannotDuplicateRewardWhenResolvedAgain()
+        {
+            var service = new DungeonRunService(new EventBus());
+            service.CurrentRewardDefinition = CreateRewardDefinition(10, 10, 40, 40);
+            await service.StartRunAsync("seed");
+            service.StartCurrentFloorCombat(CreateFormation());
+
+            service.ResolveCurrentCombatResult(CombatState.Victory);
+            service.ResolveCurrentCombatResult(CombatState.Victory);
+
+            Assert.That(service.ActiveRun.InventorySnapshot.SoftCurrency, Is.EqualTo(10));
         }
 
         [Test]
         public async Task Defeat_FailsRunAndBlocksAdvance()
         {
             var service = new DungeonRunService(new EventBus());
+            service.CurrentRewardDefinition = CreateRewardDefinition(10, 10, 40, 40);
             await service.StartRunAsync("seed");
             service.StartCurrentFloorCombat(CreateFormation());
 
@@ -104,6 +183,8 @@ namespace DungeonCrawler.Tests.EditMode
             Assert.That(service.ActiveRun.Status, Is.EqualTo(DungeonRunStatus.Failed));
             Assert.That(service.ActiveRun.LastCombatResult, Is.EqualTo(CombatState.Defeat));
             Assert.That(service.ActiveRun.CanAdvanceFloor, Is.False);
+            Assert.That(service.ActiveRun.LastResolvedReward, Is.Null);
+            Assert.That(service.ActiveRun.InventorySnapshot.SoftCurrency, Is.EqualTo(0));
             Assert.That(() => service.AdvanceFloor(), Throws.InvalidOperationException);
         }
 
@@ -149,6 +230,43 @@ namespace DungeonCrawler.Tests.EditMode
             return theme;
         }
 
+        private RewardDefinition CreateRewardDefinition(
+            int commonGoldMin,
+            int commonGoldMax,
+            int bossGoldMin,
+            int bossGoldMax,
+            ItemDefinition item = null)
+        {
+            var reward = ScriptableObject.CreateInstance<RewardDefinition>();
+            _definitions.Add(reward);
+
+            SetPrivateField(typeof(GameDefinition), reward, "id", "reward.test");
+            SetPrivateField(typeof(GameDefinition), reward, "displayName", "Reward Test");
+            SetPrivateField(typeof(RewardDefinition), reward, "commonGoldMin", commonGoldMin);
+            SetPrivateField(typeof(RewardDefinition), reward, "commonGoldMax", commonGoldMax);
+            SetPrivateField(typeof(RewardDefinition), reward, "bossGoldMin", bossGoldMin);
+            SetPrivateField(typeof(RewardDefinition), reward, "bossGoldMax", bossGoldMax);
+
+            if (item != null)
+            {
+                SetPrivateField(typeof(RewardDefinition), reward, "itemRewards", new[]
+                {
+                    new WeightedItemRewardEntry(item, 1)
+                });
+            }
+
+            return reward;
+        }
+
+        private ItemDefinition CreateItemDefinition(string id, string displayName)
+        {
+            var item = ScriptableObject.CreateInstance<ItemDefinition>();
+            _definitions.Add(item);
+            SetPrivateField(typeof(GameDefinition), item, "id", id);
+            SetPrivateField(typeof(GameDefinition), item, "displayName", displayName);
+            return item;
+        }
+
         private static CombatFormationState CreateFormation()
         {
             var formation = new CombatFormationState();
@@ -172,6 +290,43 @@ namespace DungeonCrawler.Tests.EditMode
             var field = declaringType.GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
             Assert.That(field, Is.Not.Null, $"Field '{fieldName}' was not found on {declaringType.Name}.");
             field.SetValue(target, value);
+        }
+
+        private sealed class FakeSaveService : ISaveService
+        {
+            public FakeSaveService(SaveSnapshot current)
+            {
+                Current = current;
+                HasLoadedSave = true;
+                IsInitialized = true;
+            }
+
+            public bool IsInitialized { get; }
+
+            public bool HasLoadedSave { get; private set; }
+
+            public SaveSnapshot Current { get; private set; }
+
+            public int SaveCount { get; private set; }
+
+            public Task InitializeAsync()
+            {
+                return Task.CompletedTask;
+            }
+
+            public Task<SaveSnapshot> LoadOrCreateAsync()
+            {
+                HasLoadedSave = true;
+                return Task.FromResult(Current);
+            }
+
+            public Task SaveAsync(SaveSnapshot snapshot)
+            {
+                Current = snapshot;
+                HasLoadedSave = true;
+                SaveCount++;
+                return Task.CompletedTask;
+            }
         }
     }
 }

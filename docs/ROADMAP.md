@@ -173,7 +173,8 @@ Status: Implemented inicial.
 
 Status atual: run inicia no andar 1 com `GeneratedFloor`, floors de combate podem iniciar
 `CombatController` pela run ativa, vitória libera `Next Floor`, derrota marca a run como
-`Failed`, e a recompensa pós-combate ainda e um placeholder de UI.
+`Failed`, e a recompensa pós-combate concede gold inicial, suporta item por tabela simples
+e exibe resumo antes de avançar.
 
 ### Tarefas
 
@@ -187,8 +188,8 @@ Implementar seed de run.
 Implementar regra floor % 5 == boss.
 Implementar regra floor % 10 == resting site pós-boss.
 Implementar regra floor % 20 == theme transition.
-Criar recompensa pós-combate.
-Criar tela Combat Result.
+Criar recompensa pós-combate. Status: Implemented inicial.
+Criar tela Combat Result. Status: Implemented inicial.
 Criar transição de Combat para próximo andar.
 Criar tela Resting Site placeholder.
 Criar testes de geração procedural.

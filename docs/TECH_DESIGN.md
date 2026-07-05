@@ -401,7 +401,7 @@ ConfigService
 | DamageResolver | Implemented |
 | HealingResolver | Planned |
 | StatusEffectResolver | Planned |
-| CombatRewardResolver | Planned |
+| CombatRewardResolver | Implemented inicial |
 | CombatLogService | Planned |
 
 ### 8.3 Dungeon
@@ -468,9 +468,9 @@ RemoteConfigService
 | TurnManager avança turno | Implemented |
 | AI decide ações dos inimigos | Implemented inicial (ataque básico em alvo vivo aleatório) |
 | Verificar morte, vitória e derrota | Implemented |
-| CombatRewardResolver gera recompensa | Planned (overlay de Rewards ainda e placeholder) |
+| CombatRewardResolver gera recompensa | Implemented inicial (gold + item por tabela simples) |
 | DungeonRunService avança estado da run | Implemented inicial |
-| SaveService salva snapshot | Planned |
+| SaveService salva snapshot | Implemented inicial (gold pós-combate espelhado no save local quando disponível) |
 
 ---
 

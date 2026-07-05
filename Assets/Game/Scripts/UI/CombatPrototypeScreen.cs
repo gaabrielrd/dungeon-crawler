@@ -889,13 +889,40 @@ namespace DungeonCrawler.UI
             RefreshAllVisuals();
             if (gameEvent.ResultState == CombatState.Victory)
             {
-                SetResultVisible(true, "Rewards", _dungeonRunService != null
+                var canAdvance = _dungeonRunService != null
                     && _dungeonRunService.HasActiveRun
-                    && _dungeonRunService.ActiveRun.CanAdvanceFloor);
+                    && _dungeonRunService.ActiveRun.CanAdvanceFloor
+                    && _dungeonRunService.ActiveRun.LastResolvedReward != null;
+                SetResultVisible(true, BuildRewardSummary(), canAdvance);
                 return;
             }
 
             SetResultVisible(true, "Run Failed");
+        }
+
+        private string BuildRewardSummary()
+        {
+            if (_dungeonRunService == null
+                || !_dungeonRunService.HasActiveRun
+                || _dungeonRunService.ActiveRun.LastResolvedReward == null)
+            {
+                return "Rewards\nPending...";
+            }
+
+            var reward = _dungeonRunService.ActiveRun.LastResolvedReward;
+            var lines = new List<string>
+            {
+                reward.IsBossReward ? "Boss Rewards" : "Rewards",
+                $"Gold: {reward.SoftCurrency}"
+            };
+
+            for (var index = 0; index < reward.ItemRewards.Count; index++)
+            {
+                var item = reward.ItemRewards[index];
+                lines.Add($"Item: {item.DisplayName} x{item.Quantity}");
+            }
+
+            return string.Join("\n", lines);
         }
 
         private void RefreshAllVisuals()

@@ -15,6 +15,7 @@ namespace DungeonCrawler.Tests.EditMode
             typeof(SkillDefinition),
             typeof(EnemyDefinition),
             typeof(BossDefinition),
+            typeof(RewardDefinition),
             typeof(ItemDefinition),
             typeof(EquipmentDefinition),
             typeof(StatusEffectDefinition),

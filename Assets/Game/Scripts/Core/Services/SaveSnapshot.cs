@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace DungeonCrawler.Core.Services
 {
@@ -56,6 +57,8 @@ namespace DungeonCrawler.Core.Services
             {
                 profile = new SaveProfileSnapshot();
             }
+
+            profile.Normalize();
         }
     }
 
@@ -64,6 +67,7 @@ namespace DungeonCrawler.Core.Services
     {
         public int softCurrency;
         public int premiumCurrency;
+        public List<ItemStackSnapshot> itemStacks = new();
 
         public int SoftCurrency
         {
@@ -75,6 +79,67 @@ namespace DungeonCrawler.Core.Services
         {
             get => premiumCurrency;
             set => premiumCurrency = value;
+        }
+
+        public List<ItemStackSnapshot> ItemStacks
+        {
+            get => itemStacks;
+            set => itemStacks = value;
+        }
+
+        public void Normalize()
+        {
+            if (itemStacks == null)
+            {
+                itemStacks = new List<ItemStackSnapshot>();
+            }
+        }
+
+        public void AddItem(string itemId, int quantity)
+        {
+            if (string.IsNullOrEmpty(itemId) || quantity <= 0)
+            {
+                return;
+            }
+
+            Normalize();
+
+            for (var index = 0; index < itemStacks.Count; index++)
+            {
+                var stack = itemStacks[index];
+                if (stack != null && stack.ItemId == itemId)
+                {
+                    stack.Quantity += quantity;
+                    return;
+                }
+            }
+
+            itemStacks.Add(new ItemStackSnapshot(itemId, quantity));
+        }
+    }
+
+    [Serializable]
+    public sealed class ItemStackSnapshot
+    {
+        public string itemId;
+        public int quantity;
+
+        public ItemStackSnapshot(string itemId, int quantity)
+        {
+            this.itemId = itemId;
+            this.quantity = quantity;
+        }
+
+        public string ItemId
+        {
+            get => itemId;
+            set => itemId = value;
+        }
+
+        public int Quantity
+        {
+            get => quantity;
+            set => quantity = value;
         }
     }
 }
