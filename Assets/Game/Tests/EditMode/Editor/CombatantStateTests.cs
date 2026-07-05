@@ -88,7 +88,25 @@ namespace DungeonCrawler.Tests.EditMode
         }
 
         [Test]
-        public void FactoryCopiesDefinitionStatsIntoRuntimeState()
+        public void FactoryCreatesHeroesWithPlayerSide()
+        {
+            var definition = CreateHeroDefinition(1);
+            var state = CombatantStateFactory.CreateHero(definition, CombatRank.Front);
+
+            Assert.That(state.Side, Is.EqualTo(CombatSide.Player));
+        }
+
+        [Test]
+        public void FactoryCreatesEnemiesWithEnemySide()
+        {
+            var definition = CreateEnemyDefinition(1);
+            var state = CombatantStateFactory.CreateEnemy(definition, CombatRank.Front);
+
+            Assert.That(state.Side, Is.EqualTo(CombatSide.Enemy));
+        }
+
+        [Test]
+        public void FactoryCreatesWithCorrectStatsFromDefinitions()
         {
             var stats = CreateStats(maxHp: 32, attack: 7, defense: 5, speed: 11);
             var definition = CreateHeroDefinition(1, stats);
@@ -104,6 +122,19 @@ namespace DungeonCrawler.Tests.EditMode
             Assert.That(state.Attack, Is.EqualTo(7));
             Assert.That(state.Defense, Is.EqualTo(5));
             Assert.That(state.Speed, Is.EqualTo(11));
+        }
+
+        [Test]
+        public void MutatingRuntimeHpDoesNotModifyDefinitionStats()
+        {
+            var stats = CreateStats(maxHp: 42, attack: 8, defense: 3, speed: 6);
+            var definition = CreateHeroDefinition(1, stats);
+            var state = CombatantStateFactory.CreateHero(definition, CombatRank.Front);
+
+            state.CurrentHp = 5;
+
+            Assert.That(state.CurrentHp, Is.EqualTo(5));
+            Assert.That(definition.BaseStats.MaxHp, Is.EqualTo(42));
         }
 
         [Test]

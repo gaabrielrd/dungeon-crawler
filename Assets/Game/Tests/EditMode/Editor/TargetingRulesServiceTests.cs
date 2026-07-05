@@ -57,6 +57,71 @@ namespace DungeonCrawler.Tests.EditMode
         }
 
         [Test]
+        public void DefenderTargetsOnlyAlliesInRankTwo()
+        {
+            var service = new TargetingRulesService();
+            var defender = CreateSkill(SkillTargetType.Ally, userRanks: new[] { 1 }, targetRanks: new[] { 2 });
+            var user = CreateCombatant("user", CombatSide.Player, rank: 1);
+            var validAlly = CreateCombatant("valid_ally", CombatSide.Player, rank: 2);
+            var invalidAllyRank = CreateCombatant("invalid_ally", CombatSide.Player, rank: 3);
+            var enemy = CreateCombatant("enemy", CombatSide.Enemy, rank: 2);
+            var formation = CreateFormation(user, validAlly, invalidAllyRank, enemy);
+
+            var targets = service.GetValidTargets(defender, user, formation);
+
+            Assert.That(targets, Is.EquivalentTo(new[] { validAlly }));
+        }
+
+        [Test]
+        public void FireballTargetsOnlyEnemiesInRankThreeOrHigher()
+        {
+            var service = new TargetingRulesService();
+            var fireball = CreateSkill(SkillTargetType.AllEnemies, userRanks: new[] { 1 }, targetRanks: new[] { 3, 4 });
+            var user = CreateCombatant("wizard", CombatSide.Player, rank: 1);
+            var enemyRankOne = CreateCombatant("enemy_1", CombatSide.Enemy, rank: 1);
+            var enemyRankThree = CreateCombatant("enemy_3", CombatSide.Enemy, rank: 3);
+            var enemyRankFour = CreateCombatant("enemy_4", CombatSide.Enemy, rank: 4);
+            var ally = CreateCombatant("ally", CombatSide.Player, rank: 2);
+            var formation = CreateFormation(user, enemyRankOne, enemyRankThree, enemyRankFour, ally);
+
+            var targets = service.GetValidTargets(fireball, user, formation);
+
+            Assert.That(targets, Is.EquivalentTo(new[] { enemyRankThree, enemyRankFour }));
+        }
+
+        [Test]
+        public void HealTargetsOnlyAlliesIncludingSelf()
+        {
+            var service = new TargetingRulesService();
+            var heal = CreateSkill(SkillTargetType.AllAllies, userRanks: new[] { 2 }, targetRanks: new[] { 1, 2, 3 });
+            var user = CreateCombatant("cleric", CombatSide.Player, rank: 2);
+            var allyRankOne = CreateCombatant("ally_1", CombatSide.Player, rank: 1);
+            var allyRankThree = CreateCombatant("ally_3", CombatSide.Player, rank: 3);
+            var allyRankFour = CreateCombatant("ally_4", CombatSide.Player, rank: 4);
+            var enemy = CreateCombatant("enemy", CombatSide.Enemy, rank: 1);
+            var formation = CreateFormation(user, allyRankOne, allyRankThree, allyRankFour, enemy);
+
+            var targets = service.GetValidTargets(heal, user, formation);
+
+            Assert.That(targets, Is.EquivalentTo(new[] { user, allyRankOne, allyRankThree }));
+        }
+
+        [Test]
+        public void BerserkTargetsAnyLivingCombatant()
+        {
+            var service = new TargetingRulesService();
+            var berserk = CreateSkill(SkillTargetType.Any, userRanks: new[] { 1 }, targetRanks: new[] { 1, 2, 3, 4 });
+            var user = CreateCombatant("berserker", CombatSide.Player, rank: 1);
+            var ally = CreateCombatant("ally", CombatSide.Player, rank: 2);
+            var enemy = CreateCombatant("enemy", CombatSide.Enemy, rank: 3);
+            var formation = CreateFormation(user, ally, enemy);
+
+            var targets = service.GetValidTargets(berserk, user, formation);
+
+            Assert.That(targets, Is.EquivalentTo(new[] { user, ally, enemy }));
+        }
+
+        [Test]
         public void InvalidUserRankReturnsNoTargets()
         {
             var service = new TargetingRulesService();
@@ -162,6 +227,51 @@ namespace DungeonCrawler.Tests.EditMode
             var targets = service.GetValidTargets(skill, user, formation);
 
             Assert.That(targets, Is.EquivalentTo(new[] { user, allyRankOne }));
+        }
+
+        [Test]
+        public void UserCannotUseSkillOutsideAllowedRank()
+        {
+            var service = new TargetingRulesService();
+            var skill = CreateSkill(SkillTargetType.Enemy, userRanks: new[] { 1, 2 }, targetRanks: new[] { 1 });
+            var user = CreateCombatant("user", CombatSide.Player, rank: 3);
+            var enemy = CreateCombatant("enemy", CombatSide.Enemy, rank: 1);
+            var formation = CreateFormation(user, enemy);
+
+            var targets = service.GetValidTargets(skill, user, formation);
+
+            Assert.That(targets, Is.Empty);
+        }
+
+        [Test]
+        public void UserCannotUseSkillWhenDead()
+        {
+            var service = new TargetingRulesService();
+            var skill = CreateSkill(SkillTargetType.Enemy, userRanks: new[] { 1 }, targetRanks: new[] { 1 });
+            var user = CreateCombatant("dead_user", CombatSide.Player, rank: 1);
+            user.CurrentHp = 0;
+            var enemy = CreateCombatant("enemy", CombatSide.Enemy, rank: 1);
+            var formation = CreateFormation(user, enemy);
+
+            var targets = service.GetValidTargets(skill, user, formation);
+
+            Assert.That(targets, Is.Empty);
+        }
+
+        [Test]
+        public void DeadTargetsCannotBeTargeted()
+        {
+            var service = new TargetingRulesService();
+            var skill = CreateSkill(SkillTargetType.Enemy, userRanks: new[] { 1 }, targetRanks: new[] { 1 });
+            var user = CreateCombatant("user", CombatSide.Player, rank: 1);
+            var livingEnemy = CreateCombatant("living_enemy", CombatSide.Enemy, rank: 1);
+            var deadEnemy = CreateCombatant("dead_enemy", CombatSide.Enemy, rank: 2);
+            deadEnemy.CurrentHp = 0;
+            var formation = CreateFormation(user, livingEnemy, deadEnemy);
+
+            var targets = service.GetValidTargets(skill, user, formation);
+
+            Assert.That(targets, Is.EquivalentTo(new[] { livingEnemy }));
         }
 
         [Test]

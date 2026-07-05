@@ -1,4 +1,6 @@
 using System.Reflection;
+using System.Collections.Generic;
+using System;
 using DungeonCrawler.Combat;
 using DungeonCrawler.Data.Definitions;
 using DungeonCrawler.UI;

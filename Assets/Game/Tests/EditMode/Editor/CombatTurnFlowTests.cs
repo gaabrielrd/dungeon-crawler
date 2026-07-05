@@ -49,6 +49,65 @@ namespace DungeonCrawler.Tests.EditMode
         }
 
         [Test]
+        public void SpeedTieUsesPlayerPriorityWhenSidesTie()
+        {
+            var controller = CreateController(CreateFormation(
+                CreateCombatant("enemy", CombatSide.Enemy, rank: 1, speed: 10),
+                CreateCombatant("hero", CombatSide.Player, rank: 1, speed: 10)));
+
+            controller.StartCombat();
+
+            Assert.That(controller.CurrentCombatant.Side, Is.EqualTo(CombatSide.Player));
+        }
+
+        [Test]
+        public void TurnOrderSortedBySpeedFirst()
+        {
+            var controller = CreateController(CreateFormation(
+                CreateCombatant("slow_hero", CombatSide.Player, rank: 1, speed: 2),
+                CreateCombatant("fast_enemy", CombatSide.Enemy, rank: 1, speed: 12)));
+
+            controller.StartCombat();
+
+            Assert.That(controller.CurrentCombatant.DefinitionId, Is.EqualTo("fast_enemy"));
+        }
+
+        [Test]
+        public void MultipleDeadCombatantsDoNotReceiveTurns()
+        {
+            var skippedHero1 = CreateCombatant("skipped_hero_1", CombatSide.Player, rank: 1, speed: 5);
+            var skippedHero2 = CreateCombatant("skipped_hero_2", CombatSide.Player, rank: 2, speed: 5);
+            var enemy = CreateCombatant("enemy", CombatSide.Enemy, rank: 1, speed: 1);
+            var controller = CreateController(CreateFormation(
+                skippedHero1,
+                skippedHero2,
+                enemy));
+
+            controller.StartCombat();
+            skippedHero1.CurrentHp = 0;
+            skippedHero2.CurrentHp = 0;
+            controller.CompleteCurrentTurn();
+
+            Assert.That(controller.State, Is.EqualTo(CombatState.EnemyTurn));
+            Assert.That(controller.CurrentCombatant, Is.SameAs(enemy));
+        }
+
+        [Test]
+        public void DeadCombatantsAreRemovedFromTurnOrderAfterRebuild()
+        {
+            var hero = CreateCombatant("hero", CombatSide.Player, rank: 1, speed: 10);
+            var enemy = CreateCombatant("enemy", CombatSide.Enemy, rank: 1, speed: 5);
+            var controller = CreateController(CreateFormation(hero, enemy));
+
+            controller.StartCombat();
+            enemy.CurrentHp = 0;
+            controller.CompleteCurrentTurn();
+
+            Assert.That(controller.State, Is.EqualTo(CombatState.PlayerTurn));
+            Assert.That(controller.CurrentCombatant, Is.SameAs(hero));
+        }
+
+        [Test]
         public void CompleteCurrentTurnAdvancesToNextLivingCombatant()
         {
             var controller = CreateController(CreateFormation(

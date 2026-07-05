@@ -84,6 +84,21 @@ namespace DungeonCrawler.Tests.EditMode
         }
 
         [Test]
+        public void BasicAttackRejectsDeadAttacker()
+        {
+            var hero = CreateCombatant("hero", CombatSide.Player, rank: 1, speed: 10, maxHp: 20, attack: 5, defense: 1);
+            var enemy = CreateCombatant("enemy", CombatSide.Enemy, rank: 1, speed: 1, maxHp: 20, attack: 3, defense: 1);
+            var controller = CreateController(CreateFormation(hero, enemy));
+
+            controller.StartCombat();
+            hero.CurrentHp = 0;
+
+            Assert.Throws<InvalidOperationException>(() => controller.ExecuteBasicAttack(enemy));
+            Assert.That(controller.State, Is.EqualTo(CombatState.PlayerTurn));
+            Assert.That(controller.CurrentCombatant, Is.SameAs(hero));
+        }
+
+        [Test]
         public void BasicAttackRejectsAllyTarget()
         {
             var ally = CreateCombatant("ally", CombatSide.Player, rank: 2, speed: 2, maxHp: 20, attack: 3, defense: 1);
@@ -97,21 +112,6 @@ namespace DungeonCrawler.Tests.EditMode
             Assert.Throws<InvalidOperationException>(() => controller.ExecuteBasicAttack(ally));
             Assert.That(controller.State, Is.EqualTo(CombatState.PlayerTurn));
             Assert.That(controller.CurrentCombatant.DefinitionId, Is.EqualTo("hero"));
-        }
-
-        [Test]
-        public void BasicAttackRejectsDeadAttacker()
-        {
-            var hero = CreateCombatant("hero", CombatSide.Player, rank: 1, speed: 10, maxHp: 20, attack: 5, defense: 1);
-            var enemy = CreateCombatant("enemy", CombatSide.Enemy, rank: 1, speed: 1, maxHp: 20, attack: 3, defense: 1);
-            var controller = CreateController(CreateFormation(hero, enemy));
-
-            controller.StartCombat();
-            hero.CurrentHp = 0;
-
-            Assert.Throws<InvalidOperationException>(() => controller.ExecuteBasicAttack(enemy));
-            Assert.That(controller.State, Is.EqualTo(CombatState.PlayerTurn));
-            Assert.That(controller.CurrentCombatant, Is.SameAs(hero));
         }
 
         [Test]
