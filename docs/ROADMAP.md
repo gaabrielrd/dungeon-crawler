@@ -174,7 +174,8 @@ Status: Implemented inicial.
 Status atual: run inicia no andar 1 com `GeneratedFloor`, floors de combate podem iniciar
 `CombatController` pela run ativa, vitória libera `Next Floor`, derrota marca a run como
 `Failed`, e a recompensa pós-combate concede gold inicial, suporta item por tabela simples
-e exibe resumo antes de avançar.
+e exibe resumo antes de avançar. Boss floors usam `BossEncounters` e aparecem no
+protótipo como boss placeholder.
 
 ### Tarefas
 
@@ -200,14 +201,14 @@ Criar testes de geração procedural.
 ```text
 Run inicia no andar 1.
 Andares comuns geram combates.
-Andar 5 gera boss.
-Andar 10 gera boss e depois resting site.
-Andar 20 troca tema após boss/resting site.
+Andar 5 gera boss. Status: Implemented inicial.
+Andar 10 gera boss e depois resting site. Status: Implemented inicial (flag/placeholder).
+Andar 20 troca tema após boss/resting site. Status: Implemented inicial.
 Mesma seed gera sequência reproduzível.
 ```
 
-Status atual: os dois primeiros critérios estao implementados no fluxo de prototipo; boss,
-resting site e transicao de tema continuam dependentes de conteudo/fluxos futuros.
+Status atual: os critérios de run, combate comum, boss, resting site por flag,
+transicao de tema e determinismo estao implementados no fluxo de prototipo.
 
 ---
 

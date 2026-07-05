@@ -34,5 +34,20 @@ namespace DungeonCrawler.Combat
                 rank,
                 definition.BaseStats);
         }
+
+        public static CombatantState CreateBoss(BossDefinition definition, int rank)
+        {
+            if (definition == null)
+            {
+                throw new ArgumentNullException(nameof(definition));
+            }
+
+            return new CombatantState(
+                definition.Id,
+                definition.DisplayName,
+                CombatSide.Enemy,
+                rank,
+                definition.BaseStats);
+        }
     }
 }

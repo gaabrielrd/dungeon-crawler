@@ -35,6 +35,13 @@ namespace DungeonCrawler.Tests.EditMode
         }
 
         [Test]
+        public void TestCombatDataProvider_HasAtLeastOneBossDefinition()
+        {
+            var provider = UnityEditor.AssetDatabase.LoadAssetAtPath<TestCombatDataProvider>(TestDataPath);
+            Assert.That(provider.BossDefinitions, Has.Length.GreaterThanOrEqualTo(1));
+        }
+
+        [Test]
         public void TestCombatDataProvider_HasTwoSkillDefinitions()
         {
             var provider = UnityEditor.AssetDatabase.LoadAssetAtPath<TestCombatDataProvider>(TestDataPath);
@@ -111,6 +118,24 @@ namespace DungeonCrawler.Tests.EditMode
         }
 
         [Test]
+        public void BossDefinition_HasValidId()
+        {
+            var provider = UnityEditor.AssetDatabase.LoadAssetAtPath<TestCombatDataProvider>(TestDataPath);
+            Assert.That(provider.BossDefinitions[0].Id, Is.EqualTo("boss.crypt.crypt_lord"));
+        }
+
+        [Test]
+        public void BossDefinition_HasBaseStats()
+        {
+            var provider = UnityEditor.AssetDatabase.LoadAssetAtPath<TestCombatDataProvider>(TestDataPath);
+            var boss = provider.BossDefinitions[0];
+
+            Assert.That(boss.BaseStats.MaxHp, Is.GreaterThan(0));
+            Assert.That(boss.BaseStats.Attack, Is.GreaterThan(0));
+            Assert.That(boss.BaseStats.Speed, Is.GreaterThan(0));
+        }
+
+        [Test]
         public void SkillDefinitions_HaveValidIds()
         {
             var provider = UnityEditor.AssetDatabase.LoadAssetAtPath<TestCombatDataProvider>(TestDataPath);
@@ -161,6 +186,15 @@ namespace DungeonCrawler.Tests.EditMode
             var skeleton = provider.GetEnemy("skeleton_grunt");
             Assert.That(skeleton, Is.Not.Null);
             Assert.That(skeleton.Id, Is.EqualTo("skeleton_grunt"));
+        }
+
+        [Test]
+        public void GetBoss_ReturnsCorrectDefinition()
+        {
+            var provider = UnityEditor.AssetDatabase.LoadAssetAtPath<TestCombatDataProvider>(TestDataPath);
+            var boss = provider.GetBoss("boss.crypt.crypt_lord");
+            Assert.That(boss, Is.Not.Null);
+            Assert.That(boss.Id, Is.EqualTo("boss.crypt.crypt_lord"));
         }
 
         [Test]
@@ -217,6 +251,22 @@ namespace DungeonCrawler.Tests.EditMode
             Assert.That(enemy.Side, Is.EqualTo(CombatSide.Enemy));
             Assert.That(enemy.Rank, Is.EqualTo(1));
             Assert.That(enemy.IsAlive, Is.True);
+        }
+
+        [Test]
+        public void CombatantStateFactory_CreatesBossFromDefinition()
+        {
+            var provider = UnityEditor.AssetDatabase.LoadAssetAtPath<TestCombatDataProvider>(TestDataPath);
+            var bossDef = provider.GetBoss("boss.crypt.crypt_lord");
+            var boss = CombatantStateFactory.CreateBoss(bossDef, 1);
+
+            Assert.That(boss, Is.Not.Null);
+            Assert.That(boss.DefinitionId, Is.EqualTo("boss.crypt.crypt_lord"));
+            Assert.That(boss.Side, Is.EqualTo(CombatSide.Enemy));
+            Assert.That(boss.Rank, Is.EqualTo(1));
+            Assert.That(boss.MaxHp, Is.EqualTo(bossDef.BaseStats.MaxHp));
+            Assert.That(boss.CurrentHp, Is.EqualTo(bossDef.BaseStats.MaxHp));
+            Assert.That(boss.Attack, Is.EqualTo(bossDef.BaseStats.Attack));
         }
     }
 }

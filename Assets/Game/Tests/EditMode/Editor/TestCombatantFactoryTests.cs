@@ -28,6 +28,16 @@ namespace DungeonCrawler.Tests.EditMode
         }
 
         [Test]
+        public void CombatantFactoryCreatesBossesWithEnemySide()
+        {
+            var bossDef = CreateBossDefinition(1);
+            var state = CombatantStateFactory.CreateBoss(bossDef, CombatRank.Front);
+            Assert.That(state.Side, Is.EqualTo(CombatSide.Enemy));
+            Assert.That(state.DefinitionId, Is.EqualTo("boss_1"));
+            Assert.That(state.MaxHp, Is.EqualTo(bossDef.BaseStats.MaxHp));
+        }
+
+        [Test]
         public void CombatantFactoryCreatesWithCorrectStatsFromDefinitions()
         {
             var stats = CreateStats(maxHp: 32, attack: 7, defense: 5, speed: 11);
@@ -83,6 +93,18 @@ namespace DungeonCrawler.Tests.EditMode
             SetPrivateField(typeof(GameDefinition), definition, "displayName", $"Enemy {index}");
             SetPrivateField(typeof(EnemyDefinition), definition, "baseStats",
                 CreateStats(maxHp: 10 + index, attack: 4, defense: 1, speed: 2));
+
+            return definition;
+        }
+
+        private BossDefinition CreateBossDefinition(int index)
+        {
+            var definition = ScriptableObject.CreateInstance<BossDefinition>();
+
+            SetPrivateField(typeof(GameDefinition), definition, "id", $"boss_{index}");
+            SetPrivateField(typeof(GameDefinition), definition, "displayName", $"Boss {index}");
+            SetPrivateField(typeof(BossDefinition), definition, "baseStats",
+                CreateStats(maxHp: 40 + index, attack: 9, defense: 4, speed: 3));
 
             return definition;
         }

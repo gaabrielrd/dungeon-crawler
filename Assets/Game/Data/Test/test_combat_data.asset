@@ -19,6 +19,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: c3b128ca8f8d2984fb7e873bf041db43, type: 2}
   enemyDefinitions:
   - {fileID: 11400000, guid: 7e5ac265860f1d94297f7a93fafea863, type: 2}
+  bossDefinitions:
+  - {fileID: 11400000, guid: bc04fda89a719ac4a8ad3d0397eeda9f, type: 2}
   skillDefinitions:
   - {fileID: 11400000, guid: 0c7a19b706665fb4f81730ed49bdee5b, type: 2}
   - {fileID: 11400000, guid: c4ff74b53bfddc647a99664d502eec77, type: 2}

@@ -455,7 +455,7 @@ RemoteConfigService
 
 | Etapa | Status |
 |---|---|
-| CombatScene recebe EncounterDefinition + PartyState | Implemented inicial (CombatPrototype consome run ativa e dados de teste) |
+| CombatScene recebe EncounterDefinition + PartyState | Implemented inicial (CombatPrototype consome run ativa, bosses e dados de teste) |
 | CombatController cria/recebe CombatantStates | Implemented parcial |
 | TurnManager calcula ordem inicial | Implemented |
 | UI renderiza estado | Implemented inicial |
@@ -600,7 +600,7 @@ Prioridade alta:
 | DamageResolver | Implemented |
 | StatusEffectResolver | Planned |
 | FloorGenerator | Implemented |
-| EncounterGenerator | Planned |
+| EncounterGenerator | Implemented inicial |
 | SaveMigrationService | Planned |
 | Cloud conflict resolver | Planned |
 | Economy calculations | Planned |

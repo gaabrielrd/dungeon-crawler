@@ -67,6 +67,79 @@ namespace DungeonCrawler.Tests.EditMode
         }
 
         [Test]
+        public async Task Floor5_WithTheme_GeneratesBossEncounter()
+        {
+            var service = new DungeonRunService(new EventBus())
+            {
+                CurrentThemeDefinition = CreateThemeWithCommonAndBossEncounters()
+            };
+            var run = await service.StartRunAsync("seed");
+            run.CurrentFloor = 5;
+
+            service.GenerateCurrentFloor();
+
+            Assert.That(run.CurrentFloorInfo.PrimaryType, Is.EqualTo(FloorType.Boss));
+            Assert.That(run.CurrentFloorInfo.HasRestingSite, Is.False);
+            Assert.That(run.CurrentFloorInfo.IsThemeTransition, Is.False);
+            Assert.That(run.CurrentFloorInfo.Encounter, Is.Not.Null);
+            Assert.That(run.CurrentFloorInfo.Encounter.EncounterType, Is.EqualTo(EncounterType.Boss));
+            Assert.That(run.CurrentFloorInfo.Encounter.DefinitionType, Is.EqualTo(nameof(BossDefinition)));
+            Assert.That(run.CurrentFloorInfo.Encounter.DefinitionId, Is.EqualTo("boss.test"));
+        }
+
+        [Test]
+        public async Task Floor10_WithTheme_GeneratesBossEncounterAndRestingSite()
+        {
+            var service = new DungeonRunService(new EventBus())
+            {
+                CurrentThemeDefinition = CreateThemeWithCommonAndBossEncounters()
+            };
+            var run = await service.StartRunAsync("seed");
+            run.CurrentFloor = 10;
+
+            service.GenerateCurrentFloor();
+
+            Assert.That(run.CurrentFloorInfo.PrimaryType, Is.EqualTo(FloorType.Boss));
+            Assert.That(run.CurrentFloorInfo.HasRestingSite, Is.True);
+            Assert.That(run.CurrentFloorInfo.IsThemeTransition, Is.False);
+            Assert.That(run.CurrentFloorInfo.Encounter.EncounterType, Is.EqualTo(EncounterType.Boss));
+            Assert.That(run.CurrentFloorInfo.Encounter.DefinitionType, Is.EqualTo(nameof(BossDefinition)));
+        }
+
+        [Test]
+        public async Task Floor20_WithTheme_GeneratesBossRestingSiteAndThemeTransition()
+        {
+            var service = new DungeonRunService(new EventBus())
+            {
+                CurrentThemeDefinition = CreateThemeWithCommonAndBossEncounters()
+            };
+            var run = await service.StartRunAsync("seed");
+            run.CurrentFloor = 20;
+
+            service.GenerateCurrentFloor();
+
+            Assert.That(run.CurrentFloorInfo.PrimaryType, Is.EqualTo(FloorType.Boss));
+            Assert.That(run.CurrentFloorInfo.HasRestingSite, Is.True);
+            Assert.That(run.CurrentFloorInfo.IsThemeTransition, Is.True);
+            Assert.That(run.CurrentFloorInfo.NextThemeId, Is.Not.Null);
+            Assert.That(run.CurrentFloorInfo.Encounter.EncounterType, Is.EqualTo(EncounterType.Boss));
+            Assert.That(run.CurrentFloorInfo.Encounter.DefinitionType, Is.EqualTo(nameof(BossDefinition)));
+        }
+
+        [Test]
+        public async Task BossFloor_WithMissingBossTable_ThrowsInsteadOfUsingCommonTable()
+        {
+            var service = new DungeonRunService(new EventBus())
+            {
+                CurrentThemeDefinition = CreateThemeWithEncounter()
+            };
+            var run = await service.StartRunAsync("seed");
+            run.CurrentFloor = 5;
+
+            Assert.That(() => service.GenerateCurrentFloor(), Throws.InvalidOperationException);
+        }
+
+        [Test]
         public async Task StartCurrentFloorCombat_CreatesControllerAndMarksInCombat()
         {
             var service = new DungeonRunService(new EventBus());
@@ -227,6 +300,50 @@ namespace DungeonCrawler.Tests.EditMode
             SetPrivateField(typeof(GameDefinition), theme, "id", "theme.test");
             SetPrivateField(typeof(GameDefinition), theme, "displayName", "Theme Test");
             SetPrivateField(typeof(DungeonThemeDefinition), theme, "commonEncounters", table);
+            return theme;
+        }
+
+        private DungeonThemeDefinition CreateThemeWithCommonAndBossEncounters()
+        {
+            var enemy = ScriptableObject.CreateInstance<EnemyDefinition>();
+            var commonTable = ScriptableObject.CreateInstance<EncounterTableDefinition>();
+            var boss = ScriptableObject.CreateInstance<BossDefinition>();
+            var bossTable = ScriptableObject.CreateInstance<EncounterTableDefinition>();
+            var theme = ScriptableObject.CreateInstance<DungeonThemeDefinition>();
+            _definitions.Add(enemy);
+            _definitions.Add(commonTable);
+            _definitions.Add(boss);
+            _definitions.Add(bossTable);
+            _definitions.Add(theme);
+
+            SetPrivateField(typeof(GameDefinition), enemy, "id", "enemy.test");
+            SetPrivateField(typeof(GameDefinition), enemy, "displayName", "Enemy Test");
+            SetPrivateField(typeof(EnemyDefinition), enemy, "baseStats", CreateStats(10, 4, 1, 3));
+
+            SetPrivateField(typeof(GameDefinition), commonTable, "id", "encounter.table.common.test");
+            SetPrivateField(typeof(GameDefinition), commonTable, "displayName", "Test Common Encounters");
+            SetPrivateField(typeof(EncounterTableDefinition), commonTable, "encounterType", EncounterType.Common);
+            SetPrivateField(typeof(EncounterTableDefinition), commonTable, "entries", new[]
+            {
+                new WeightedDefinitionEntry(enemy, 1)
+            });
+
+            SetPrivateField(typeof(GameDefinition), boss, "id", "boss.test");
+            SetPrivateField(typeof(GameDefinition), boss, "displayName", "Boss Test");
+            SetPrivateField(typeof(BossDefinition), boss, "baseStats", CreateStats(40, 10, 4, 5));
+
+            SetPrivateField(typeof(GameDefinition), bossTable, "id", "encounter.table.boss.test");
+            SetPrivateField(typeof(GameDefinition), bossTable, "displayName", "Test Boss Encounters");
+            SetPrivateField(typeof(EncounterTableDefinition), bossTable, "encounterType", EncounterType.Boss);
+            SetPrivateField(typeof(EncounterTableDefinition), bossTable, "entries", new[]
+            {
+                new WeightedDefinitionEntry(boss, 1)
+            });
+
+            SetPrivateField(typeof(GameDefinition), theme, "id", "theme.test");
+            SetPrivateField(typeof(GameDefinition), theme, "displayName", "Theme Test");
+            SetPrivateField(typeof(DungeonThemeDefinition), theme, "commonEncounters", commonTable);
+            SetPrivateField(typeof(DungeonThemeDefinition), theme, "bossEncounters", bossTable);
             return theme;
         }
 

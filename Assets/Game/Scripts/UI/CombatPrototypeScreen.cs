@@ -221,7 +221,7 @@ namespace DungeonCrawler.UI
             _formation = CreateDefaultFormation();
             BindFormationToSlots();
             SetResultVisible(false, string.Empty);
-            _statusText.text = "Tap Basic Attack, then tap a valid enemy target.";
+            _statusText.text = BuildFloorStatusText();
 
             try
             {
@@ -350,6 +350,13 @@ namespace DungeonCrawler.UI
 
         private void AddRunEncounterOrFallbackEnemies(CombatFormationState formation)
         {
+            var boss = ResolveBossDefinitionForCurrentFloor();
+            if (boss != null)
+            {
+                formation.AddCombatant(CombatantStateFactory.CreateBoss(boss, CombatRank.Front));
+                return;
+            }
+
             var enemy = ResolveEnemyDefinitionForCurrentFloor();
             if (enemy != null)
             {
@@ -361,6 +368,22 @@ namespace DungeonCrawler.UI
             formation.AddCombatant(CreateCombatant("enemy_raider", "Raider", CombatSide.Enemy, 2, 20, 8, 2, 10));
             formation.AddCombatant(CreateCombatant("enemy_shaman", "Shaman", CombatSide.Enemy, 3, 16, 9, 1, 11));
             formation.AddCombatant(CreateCombatant("enemy_guard", "Guard", CombatSide.Enemy, 4, 25, 6, 4, 6));
+        }
+
+        private BossDefinition ResolveBossDefinitionForCurrentFloor()
+        {
+            if (testData == null || testData.BossDefinitions.Length == 0)
+            {
+                return null;
+            }
+
+            var encounter = _dungeonRunService.ActiveRun.CurrentFloorInfo?.Encounter;
+            if (encounter == null || encounter.DefinitionType != nameof(BossDefinition))
+            {
+                return null;
+            }
+
+            return testData.GetBoss(encounter.DefinitionId);
         }
 
         private EnemyDefinition ResolveEnemyDefinitionForCurrentFloor()
@@ -381,6 +404,31 @@ namespace DungeonCrawler.UI
             }
 
             return testData.EnemyDefinitions[0];
+        }
+
+        private string BuildFloorStatusText()
+        {
+            if (_dungeonRunService == null || !_dungeonRunService.HasActiveRun)
+            {
+                return "Tap Basic Attack, then tap a valid enemy target.";
+            }
+
+            var floor = _dungeonRunService.ActiveRun.CurrentFloorInfo;
+            if (floor == null)
+            {
+                return "Tap Basic Attack, then tap a valid enemy target.";
+            }
+
+            var label = floor.PrimaryType == DungeonCrawler.Dungeon.FloorType.Boss
+                ? $"Floor {floor.FloorNumber} - Boss Floor"
+                : $"Floor {floor.FloorNumber}";
+
+            if (floor.Encounter != null)
+            {
+                label += $" - {floor.Encounter.DisplayName}";
+            }
+
+            return label;
         }
 
         private static void AddEnemyDefinitionToFormation(CombatFormationState formation, EnemyDefinition enemy)
@@ -922,7 +970,28 @@ namespace DungeonCrawler.UI
                 lines.Add($"Item: {item.DisplayName} x{item.Quantity}");
             }
 
+            AppendFloorResolutionLines(lines);
+
             return string.Join("\n", lines);
+        }
+
+        private void AppendFloorResolutionLines(List<string> lines)
+        {
+            var floor = _dungeonRunService.ActiveRun.CurrentFloorInfo;
+            if (floor == null)
+            {
+                return;
+            }
+
+            if (floor.HasRestingSite)
+            {
+                lines.Add("Resting Site Unlocked");
+            }
+
+            if (floor.IsThemeTransition)
+            {
+                lines.Add("Theme Transition Ready");
+            }
         }
 
         private void RefreshAllVisuals()
