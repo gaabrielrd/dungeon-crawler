@@ -169,13 +169,13 @@ Tela simples de resultado
 Primeiro fluxo de avançar andar
 ```
 
-Status: Planned.
+Status: Implemented inicial.
 
 ### Tarefas
 
 ```text
 Criar RunState.
-Criar FloorState.
+Criar FloorState (GeneratedFloor).
 Criar DungeonThemeDefinition.
 Criar EncounterDefinition.
 Criar EncounterTableDefinition.

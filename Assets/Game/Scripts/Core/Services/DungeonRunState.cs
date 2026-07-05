@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using DungeonCrawler.Combat;
 using DungeonCrawler.Core.Events;
 using DungeonCrawler.Core.Services;
+using DungeonCrawler.Dungeon;
 
 namespace DungeonCrawler.Core.Services
 {
@@ -16,6 +17,7 @@ namespace DungeonCrawler.Core.Services
         public List<CombatantState> party;
         public SaveProfileSnapshot inventorySnapshot;
         public HashSet<int> visitedFloors;
+        public GeneratedFloor currentFloorInfo;
         public string startedAtUtc;
 
         public string RunId
@@ -58,6 +60,12 @@ namespace DungeonCrawler.Core.Services
         {
             get => visitedFloors;
             set => visitedFloors = value;
+        }
+
+        public GeneratedFloor CurrentFloorInfo
+        {
+            get => currentFloorInfo;
+            set => currentFloorInfo = value;
         }
 
         public string StartedAtUtc
@@ -113,33 +121,12 @@ namespace DungeonCrawler.Core.Services
         {
             currentFloor++;
             visitedFloors.Add(currentFloor);
-
-            if (currentFloor % 5 == 0 && currentFloor <= 20)
-            {
-                currentThemeId = GetNextThemeId();
-            }
         }
 
-        private string GetNextThemeId()
+        public void ApplyFloorGeneration(GeneratedFloor floor)
         {
-            if (currentFloor == 5)
-            {
-                return "crypt.boss";
-            }
-            if (currentFloor == 10)
-            {
-                return "crypt";
-            }
-            if (currentFloor == 15)
-            {
-                return "crypt.boss";
-            }
-            if (currentFloor == 20)
-            {
-                return "crypt.transition";
-            }
-
-            return currentThemeId;
+            currentFloorInfo = floor;
+            currentThemeId = floor.ThemeId;
         }
     }
 }

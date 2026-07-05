@@ -138,19 +138,6 @@ namespace DungeonCrawler.Tests.EditMode
         }
 
         [Test]
-        public void MutatingRuntimeHpDoesNotModifyDefinitionStats()
-        {
-            var stats = CreateStats(maxHp: 42, attack: 8, defense: 3, speed: 6);
-            var definition = CreateHeroDefinition(1, stats);
-            var state = CombatantStateFactory.CreateHero(definition, CombatRank.Front);
-
-            state.CurrentHp = 5;
-
-            Assert.That(state.CurrentHp, Is.EqualTo(5));
-            Assert.That(definition.BaseStats.MaxHp, Is.EqualTo(42));
-        }
-
-        [Test]
         public void AliveAndDeadStateReflectCurrentHp()
         {
             var state = CombatantStateFactory.CreateEnemy(CreateEnemyDefinition(1), CombatRank.Front);

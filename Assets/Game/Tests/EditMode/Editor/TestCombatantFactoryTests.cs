@@ -1,8 +1,11 @@
+using System;
+using System.Collections.Generic;
 using System.Reflection;
 using DungeonCrawler.Combat;
 using DungeonCrawler.Core.Events;
 using DungeonCrawler.Data.Definitions;
 using NUnit.Framework;
+using UnityEngine;
 
 namespace DungeonCrawler.Tests.EditMode
 {

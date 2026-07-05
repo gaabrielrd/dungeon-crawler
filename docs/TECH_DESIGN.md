@@ -599,7 +599,7 @@ Prioridade alta:
 | TargetingRulesService | Implemented |
 | DamageResolver | Implemented |
 | StatusEffectResolver | Planned |
-| FloorGenerator | Planned |
+| FloorGenerator | Implemented |
 | EncounterGenerator | Planned |
 | SaveMigrationService | Planned |
 | Cloud conflict resolver | Planned |

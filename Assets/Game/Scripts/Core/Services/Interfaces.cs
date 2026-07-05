@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using DungeonCrawler.Combat;
 
 namespace DungeonCrawler.Core.Services
 {
@@ -38,6 +40,27 @@ namespace DungeonCrawler.Core.Services
     public interface ISceneLoaderService : IInitializableService
     {
         Task LoadSceneAsync(string sceneName);
+    }
+
+    public interface IDungeonRunService : IInitializableService
+    {
+        bool HasActiveRun { get; }
+
+        DungeonRunState ActiveRun { get; }
+
+        Task<DungeonRunState> StartRunAsync(string seed = null, List<CombatantState> party = null);
+
+        Task AbandonRunAsync(string runId);
+
+        Task CompleteRunAsync(string runId, Dictionary<string, object> rewards);
+
+        Task<DungeonRunState> LoadRunAsync(string runId);
+
+        void AdvanceFloor();
+
+        void AbandonCurrentRun();
+
+        void CompleteCurrentRun(Dictionary<string, object> rewards);
     }
 
     public interface IEventBus

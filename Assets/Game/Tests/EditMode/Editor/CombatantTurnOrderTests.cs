@@ -1,5 +1,7 @@
+using System;
 using System.Reflection;
 using DungeonCrawler.Combat;
+using DungeonCrawler.Data.Definitions;
 using NUnit.Framework;
 
 namespace DungeonCrawler.Tests.EditMode

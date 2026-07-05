@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using DungeonCrawler.Combat;
 using DungeonCrawler.Core.Events;
 using DungeonCrawler.Core.Services;
+using DungeonCrawler.Dungeon;
 
 namespace DungeonCrawler.Core.Services
 {
@@ -75,12 +76,17 @@ namespace DungeonCrawler.Core.Services
 
         public async Task<DungeonRunState> LoadRunAsync(string runId)
         {
+            var seed = "test-seed-123";
+            var generator = new FloorGenerator();
+            var floor = generator.GenerateFloor(seed, 5, "crypt");
+
             var run = new DungeonRunState
             {
                 runId = runId,
-                seed = "test-seed-123",
+                seed = seed,
                 currentFloor = 5,
-                currentThemeId = "crypt",
+                currentThemeId = floor.ThemeId,
+                currentFloorInfo = floor,
                 party = new List<CombatantState>(),
                 inventorySnapshot = new SaveProfileSnapshot(),
                 visitedFloors = new HashSet<int> { 1, 2, 3, 4, 5 },
@@ -97,7 +103,13 @@ namespace DungeonCrawler.Core.Services
                 throw new InvalidOperationException("No active run to advance.");
             }
 
+            var generator = new FloorGenerator();
+            var nextFloor = ActiveRun.CurrentFloor + 1;
+            var generated = generator.GenerateFloor(ActiveRun.Seed, nextFloor, ActiveRun.CurrentThemeId);
+
             ActiveRun.AdvanceFloor();
+            ActiveRun.ApplyFloorGeneration(generated);
+
             _eventBus.Publish(new FloorAdvancedEvent(ActiveRun.RunId, ActiveRun.CurrentFloor, ActiveRun.CurrentThemeId));
         }
 
