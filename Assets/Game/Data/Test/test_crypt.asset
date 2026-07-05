@@ -16,11 +16,11 @@ MonoBehaviour:
   displayName: Test Crypt
   description: 
   firstFloor: 1
-  lastFloor: 1
+  lastFloor: 20
   visualPalette: 
   background: {fileID: 0}
   music: {fileID: 0}
-  commonEncounters: {fileID: 0}
+  commonEncounters: {fileID: 11400000, guid: e8e74c2a1a5d7f14b8713c6874fc0b5d, type: 2}
   eliteEncounters: {fileID: 0}
-  bossEncounters: {fileID: 0}
+  bossEncounters: {fileID: 11400000, guid: f60d6b0993f8cc046b0d010999b5696f, type: 2}
   shopTable: {fileID: 0}

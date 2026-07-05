@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using DungeonCrawler.Combat;
 using DungeonCrawler.Core.Events;
 using DungeonCrawler.Core.Services;
+using DungeonCrawler.Data.Definitions;
 using DungeonCrawler.Dungeon;
 
 namespace DungeonCrawler.Core.Services
@@ -22,6 +23,8 @@ namespace DungeonCrawler.Core.Services
         public bool HasActiveRun { get; private set; }
 
         public DungeonRunState ActiveRun { get; private set; }
+
+        public DungeonThemeDefinition CurrentThemeDefinition { get; set; }
 
         public async Task InitializeAsync()
         {
@@ -103,9 +106,16 @@ namespace DungeonCrawler.Core.Services
                 throw new InvalidOperationException("No active run to advance.");
             }
 
-            var generator = new FloorGenerator();
+            var floorGen = new FloorGenerator();
             var nextFloor = ActiveRun.CurrentFloor + 1;
-            var generated = generator.GenerateFloor(ActiveRun.Seed, nextFloor, ActiveRun.CurrentThemeId);
+            var generated = floorGen.GenerateFloor(ActiveRun.Seed, nextFloor, ActiveRun.CurrentThemeId);
+
+            if (CurrentThemeDefinition != null)
+            {
+                var encounterGen = new EncounterGenerator();
+                var encounter = encounterGen.Resolve(CurrentThemeDefinition, generated.PrimaryType, generated.LocalSeed);
+                generated = generated.WithEncounter(encounter);
+            }
 
             ActiveRun.AdvanceFloor();
             ActiveRun.ApplyFloorGeneration(generated);

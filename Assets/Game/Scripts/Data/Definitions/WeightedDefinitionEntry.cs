@@ -13,5 +13,11 @@ namespace DungeonCrawler.Data.Definitions
         public GameDefinition Definition => definition;
 
         public int Weight => weight;
+
+        public WeightedDefinitionEntry(GameDefinition definition, int weight)
+        {
+            this.definition = definition;
+            this.weight = weight;
+        }
     }
 }
