@@ -6,6 +6,7 @@ using DungeonCrawler.Combat;
 using DungeonCrawler.Core.Events;
 using DungeonCrawler.Core.Services;
 using DungeonCrawler.Data.Definitions;
+using DungeonCrawler.Data.State;
 using DungeonCrawler.Dungeon;
 using NUnit.Framework;
 using UnityEngine;
@@ -229,6 +230,52 @@ namespace DungeonCrawler.Tests.EditMode
         }
 
         [Test]
+        public async Task Victory_WithDropChanceZero_DoesNotApplyItem()
+        {
+            var potion = CreateItemDefinition("item.test.potion", "Small Potion");
+            var service = new DungeonRunService(new EventBus());
+            service.CurrentRewardDefinition = CreateRewardDefinition(10, 10, 40, 40, potion, 0f);
+            await service.StartRunAsync("seed");
+            service.StartCurrentFloorCombat(CreateFormation());
+
+            service.ResolveCurrentCombatResult(CombatState.Victory);
+
+            Assert.That(service.ActiveRun.LastResolvedReward.ItemRewards, Is.Empty);
+            Assert.That(service.ActiveRun.InventorySnapshot.ItemStacks, Is.Empty);
+        }
+
+        [Test]
+        public async Task Victory_AppliesXpLevelUpAndRefreshesPartyStats()
+        {
+            var heroDef = CreateHeroDefinition();
+            var heroState = new HeroState(heroDef, "Aldren", Rarity.Common)
+            {
+                IsInParty = true,
+                PartyRank = 1
+            };
+            var heroCombatant = CombatantStateFactory.CreateHeroFromState(heroState, 1);
+            heroCombatant.CurrentHp = 1;
+            var formation = new CombatFormationState();
+            formation.AddCombatant(heroCombatant);
+            formation.AddCombatant(new CombatantState("enemy", "Enemy", CombatSide.Enemy, 1, CreateStats(12, 4, 1, 3)));
+
+            var service = new DungeonRunService(new EventBus());
+            var run = await service.StartRunAsync("seed", new List<CombatantState> { heroCombatant });
+            run.Roster = new List<HeroState> { heroState };
+            service.StartCurrentFloorCombat(formation);
+
+            service.ResolveCurrentCombatResult(CombatState.Victory);
+
+            Assert.That(heroState.Level, Is.EqualTo(2));
+            Assert.That(heroState.MaxHp, Is.EqualTo(35));
+            Assert.That(heroState.CurrentHp, Is.EqualTo(35));
+            Assert.That(heroState.Attack, Is.EqualTo(5));
+            Assert.That(service.ActiveRun.Party[0].MaxHp, Is.EqualTo(35));
+            Assert.That(service.ActiveRun.Party[0].CurrentHp, Is.EqualTo(35));
+            Assert.That(service.ActiveRun.Party[0].Attack, Is.EqualTo(5));
+        }
+
+        [Test]
         public async Task Victory_CannotDuplicateRewardWhenResolvedAgain()
         {
             var service = new DungeonRunService(new EventBus());
@@ -352,7 +399,8 @@ namespace DungeonCrawler.Tests.EditMode
             int commonGoldMax,
             int bossGoldMin,
             int bossGoldMax,
-            ItemDefinition item = null)
+            ItemDefinition item = null,
+            float itemDropChance = 1f)
         {
             var reward = ScriptableObject.CreateInstance<RewardDefinition>();
             _definitions.Add(reward);
@@ -363,6 +411,8 @@ namespace DungeonCrawler.Tests.EditMode
             SetPrivateField(typeof(RewardDefinition), reward, "commonGoldMax", commonGoldMax);
             SetPrivateField(typeof(RewardDefinition), reward, "bossGoldMin", bossGoldMin);
             SetPrivateField(typeof(RewardDefinition), reward, "bossGoldMax", bossGoldMax);
+            SetPrivateField(typeof(RewardDefinition), reward, "commonItemDropChance", itemDropChance);
+            SetPrivateField(typeof(RewardDefinition), reward, "bossItemDropChance", itemDropChance);
 
             if (item != null)
             {
@@ -382,6 +432,17 @@ namespace DungeonCrawler.Tests.EditMode
             SetPrivateField(typeof(GameDefinition), item, "id", id);
             SetPrivateField(typeof(GameDefinition), item, "displayName", displayName);
             return item;
+        }
+
+        private HeroClassDefinition CreateHeroDefinition()
+        {
+            var hero = ScriptableObject.CreateInstance<HeroClassDefinition>();
+            _definitions.Add(hero);
+            SetPrivateField(typeof(GameDefinition), hero, "id", "guardian");
+            SetPrivateField(typeof(GameDefinition), hero, "displayName", "Guardian");
+            SetPrivateField(typeof(HeroClassDefinition), hero, "baseStats", CreateStats(30, 3, 2, 5));
+            SetPrivateField(typeof(HeroClassDefinition), hero, "baseRarity", Rarity.Common);
+            return hero;
         }
 
         private static CombatFormationState CreateFormation()

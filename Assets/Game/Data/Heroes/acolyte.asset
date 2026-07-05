@@ -25,7 +25,10 @@ MonoBehaviour:
     defense: 5
     speed: 6
   baseRarity: 0
-  startingSkills: []
+  startingSkills:
+  - {fileID: 11400000, guid: 0c7a19b706665fb4f81730ed49bdee5b, type: 2}
+  - {fileID: 11400000, guid: 10000000000000000000000000000005, type: 2}
+  - {fileID: 11400000, guid: 10000000000000000000000000000006, type: 2}
   skillsByLevel: []
   unlockableSkills: []
   namePool:

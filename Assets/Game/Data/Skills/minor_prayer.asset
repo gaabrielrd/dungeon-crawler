@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53771a2006470c149b1ec008526643c9, type: 3}
+  m_Name: minor_prayer
+  m_EditorClassIdentifier: Assembly-CSharp::DungeonCrawler.Data.Definitions.SkillDefinition
+  id: skill.acolyte.minor_prayer
+  displayName: Prece Menor
+  description: Cura leve em um aliado.
+  icon: {fileID: 21300000, guid: 55a8f42da9909e141b033a761de2c022, type: 3}
+  validUserRanks: 0300000004000000
+  validTargetRanks: 01000000020000000300000004000000
+  targetType: 1
+  damageType: 1
+  damageMultiplier: 0
+  cooldown: 0
+  effects: []

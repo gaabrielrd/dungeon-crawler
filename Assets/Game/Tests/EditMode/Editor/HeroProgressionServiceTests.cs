@@ -280,6 +280,7 @@ namespace DungeonCrawler.Tests.EditMode
         {
             var hero = CreateTestHero();
             Assert.That(hero.BaseAverageDamage, Is.EqualTo(3));
+            Assert.That(hero.Attack, Is.EqualTo(3));
         }
 
         [Test]
@@ -293,7 +294,10 @@ namespace DungeonCrawler.Tests.EditMode
         public void HeroState_LevelUp_IncreasesLevel()
         {
             var hero = CreateTestHero();
+            hero.TakeDamage(10);
             Assert.That(hero.Level, Is.EqualTo(1));
+            Assert.That(hero.MaxHp, Is.EqualTo(30));
+            Assert.That(hero.CurrentHp, Is.EqualTo(20));
 
             hero.AddXp(5);
             HeroProgressionService.TryLevelUp(hero);
@@ -301,6 +305,9 @@ namespace DungeonCrawler.Tests.EditMode
             Assert.That(hero.Level, Is.EqualTo(2));
             Assert.That(hero.BaseAverageDamage, Is.EqualTo(5));
             Assert.That(hero.XpToNextLevel, Is.EqualTo(8));
+            Assert.That(hero.MaxHp, Is.EqualTo(35));
+            Assert.That(hero.CurrentHp, Is.EqualTo(35));
+            Assert.That(hero.Attack, Is.EqualTo(5));
         }
 
         [Test]

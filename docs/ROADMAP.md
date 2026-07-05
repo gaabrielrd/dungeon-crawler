@@ -129,7 +129,7 @@ Criar o primeiro combate funcional com party, inimigos, turnos, habilidades e vi
 | Implementar fluxo de vitória/derrota. | Implemented |
 | Implementar eventos de morte, vitória e derrota. | Implemented |
 | Criar UI temporária de combate. | Implemented inicial |
-| Criar botão de skill. | Planned |
+| Criar botão de skill. | Implemented inicial |
 | Criar seleção de alvo. | Implemented inicial |
 | Criar testes EditMode. | Implemented |
 
@@ -138,7 +138,7 @@ Criar o primeiro combate funcional com party, inimigos, turnos, habilidades e vi
 | Critério | Status |
 |---|---|
 | Jogador inicia combate. | Implemented |
-| Jogador escolhe habilidade. | Implemented inicial (ataque básico) |
+| Jogador escolhe habilidade. | Implemented inicial (Basic Strike + skills iniciais) |
 | Sistema valida alvo por rank. | Implemented |
 | Inimigo age automaticamente. | Implemented inicial |
 | HP é reduzido corretamente. | Implemented |
@@ -173,8 +173,8 @@ Status: Implemented.
 
 Status atual: run inicia no andar 1 com `GeneratedFloor`, floors de combate podem iniciar
 `CombatController` pela run ativa, vitória libera `Next Floor` (ou `Enter Rest Site` em floors
-múltiplas de 10), derrota marca a run como `Failed`, e a recompensa pós-combate concede gold
-inicial, suporta item por tabela simples e exibe resumo antes de avançar. Boss floors usam
+múltiplas de 10), derrota marca a run como `Failed`, e a recompensa pós-combate concede gold,
+XP e chance de item por tabela simples, e exibe resumo antes de avançar. Boss floors usam
 `BossEncounters` e aparecem no protótipo como boss placeholder. Resting site possui tela
 placeholder com cura da party, botoes desabilitados para loja/skills/upgrades/hire, e
 transição para o próximo andar.
@@ -250,9 +250,9 @@ Status: Implemented inicial.
 Implementado nesta sprint:
 - `HeroProgressionDefinition` (ScriptableObject) com tabela Fibonacci níveis 1–10.
 - `HeroProgressionService` (pure C#) com queries de dano médio, XP, level-up, skill availability, multiplicador de nível de skill.
-- `HeroState` estendido com `BaseAverageDamage`, `XpToNextLevel`, `IsMaxLevel`, `LevelUp()`.
-- `ResolvedReward` e `RewardResolver` estendidos com XP por combate.
-- `DungeonRunService` concede XP e executa level-up automático após vitória.
+- `HeroState` estendido com `BaseAverageDamage`, `XpToNextLevel`, `IsMaxLevel`, `LevelUp()`, HP máximo crescente e cura ao máximo no level-up.
+- `ResolvedReward` e `RewardResolver` estendidos com XP por combate e chance determinística de item.
+- `DungeonRunService` concede XP, executa level-up automático após vitória e reconstrói a party com os stats atualizados.
 - `IRestSiteService` / `RestSiteService` expõem `GetAvailableSkills()` por classe e nível.
 - Cobertura de testes para níveis 1, 2, 3, 5, 8, 10.
 

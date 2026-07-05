@@ -462,8 +462,8 @@ RemoteConfigService
 | CombatScene recebe EncounterDefinition + PartyState | Implemented inicial (CombatPrototype consome run ativa, bosses e dados de teste) |
 | CombatController cria/recebe CombatantStates | Implemented parcial |
 | TurnManager calcula ordem inicial | Implemented |
-| UI renderiza estado | Implemented inicial |
-| Player escolhe Skill + Target | Implemented inicial (ataque básico + seleção de alvo válido) |
+| UI renderiza estado | Implemented inicial (slots ativos, barras de HP/EXP no protótipo) |
+| Player escolhe Skill + Target | Implemented inicial (Basic Strike + skills iniciais + seleção de alvo válido) |
 | TargetingRulesService valida ação | Implemented |
 | CombatController executa comando básico | Implemented |
 | DamageResolver aplica dano básico | Implemented |
@@ -472,8 +472,8 @@ RemoteConfigService
 | TurnManager avança turno | Implemented |
 | AI decide ações dos inimigos | Implemented inicial (ataque básico em alvo vivo aleatório) |
 | Verificar morte, vitória e derrota | Implemented |
-| CombatRewardResolver gera recompensa | Implemented inicial (gold + item por tabela simples) |
-| DungeonRunService avança estado da run | Implemented inicial |
+| CombatRewardResolver gera recompensa | Implemented inicial (gold + XP + chance de item por tabela simples) |
+| DungeonRunService avança estado da run | Implemented inicial (inclui XP, level-up e atualização da party ativa) |
 | SaveService salva snapshot | Implemented inicial (gold pós-combate espelhado no save local quando disponível) |
 
 ---

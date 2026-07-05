@@ -42,10 +42,10 @@ namespace DungeonCrawler.Tests.EditMode
         }
 
         [Test]
-        public void TestCombatDataProvider_HasTwoSkillDefinitions()
+        public void TestCombatDataProvider_HasPrototypeSkillDefinitions()
         {
             var provider = UnityEditor.AssetDatabase.LoadAssetAtPath<TestCombatDataProvider>(TestDataPath);
-            Assert.That(provider.SkillDefinitions, Has.Length.EqualTo(2));
+            Assert.That(provider.SkillDefinitions, Has.Length.EqualTo(9));
         }
 
         [Test]
@@ -81,8 +81,32 @@ namespace DungeonCrawler.Tests.EditMode
 
             foreach (var hero in provider.HeroDefinitions)
             {
-                Assert.That(hero.StartingSkills, Is.Not.Empty, $"{hero.Id} should have at least one starting skill");
+                Assert.That(hero.StartingSkills, Has.Length.EqualTo(3), $"{hero.Id} should have basic strike plus two class skills");
+                Assert.That(hero.StartingSkills[0].Id, Is.EqualTo("basic_strike"), $"{hero.Id} should start with basic strike");
             }
+        }
+
+        [Test]
+        public void HeroDefinitions_HaveDocumentedStartingSkills()
+        {
+            var provider = UnityEditor.AssetDatabase.LoadAssetAtPath<TestCombatDataProvider>(TestDataPath);
+
+            AssertStartingSkills(provider, "guardian",
+                "basic_strike",
+                "skill.guardian.guard_strike",
+                "skill.guardian.iron_stance");
+            AssertStartingSkills(provider, "rogue",
+                "basic_strike",
+                "skill.rogue.quick_cut",
+                "skill.rogue.shadow_step");
+            AssertStartingSkills(provider, "acolyte",
+                "basic_strike",
+                "skill.acolyte.minor_prayer",
+                "skill.acolyte.candlelight");
+            AssertStartingSkills(provider, "arcanist",
+                "basic_strike",
+                "skill.arcanist.profane_spark",
+                "skill.arcanist.slowing_seal");
         }
 
         [Test]
@@ -139,7 +163,18 @@ namespace DungeonCrawler.Tests.EditMode
         public void SkillDefinitions_HaveValidIds()
         {
             var provider = UnityEditor.AssetDatabase.LoadAssetAtPath<TestCombatDataProvider>(TestDataPath);
-            var expected = new[] { "basic_strike", "shield_bash" };
+            var expected = new[]
+            {
+                "basic_strike",
+                "skill.guardian.guard_strike",
+                "skill.guardian.iron_stance",
+                "skill.rogue.quick_cut",
+                "skill.rogue.shadow_step",
+                "skill.acolyte.minor_prayer",
+                "skill.acolyte.candlelight",
+                "skill.arcanist.profane_spark",
+                "skill.arcanist.slowing_seal",
+            };
 
             for (var i = 0; i < provider.SkillDefinitions.Length; i++)
             {
@@ -155,7 +190,7 @@ namespace DungeonCrawler.Tests.EditMode
 
             foreach (var skill in provider.SkillDefinitions)
             {
-                Assert.That(skill.TargetType, Is.EqualTo(SkillTargetType.Enemy));
+                Assert.That(Enum.IsDefined(typeof(SkillTargetType), skill.TargetType), Is.True);
             }
         }
 
@@ -166,7 +201,7 @@ namespace DungeonCrawler.Tests.EditMode
 
             foreach (var skill in provider.SkillDefinitions)
             {
-                Assert.That(skill.DamageMultiplier, Is.GreaterThan(0f));
+                Assert.That(skill.DamageMultiplier, Is.GreaterThanOrEqualTo(0f));
             }
         }
 
@@ -207,20 +242,21 @@ namespace DungeonCrawler.Tests.EditMode
         }
 
         [Test]
-        public void ShieldBash_HasCooldown()
+        public void IronStance_IsSelfTargetingUtilitySkill()
         {
             var provider = UnityEditor.AssetDatabase.LoadAssetAtPath<TestCombatDataProvider>(TestDataPath);
-            var shieldBash = provider.GetSkill("shield_bash");
-            Assert.That(shieldBash.Cooldown, Is.EqualTo(2), "Shield Bash should have cooldown 2");
+            var ironStance = provider.GetSkill("skill.guardian.iron_stance");
+            Assert.That(ironStance.TargetType, Is.EqualTo(SkillTargetType.Self));
+            Assert.That(ironStance.DamageMultiplier, Is.Zero);
         }
 
         [Test]
-        public void ShieldBash_RestrictedToFrontlineRanks()
+        public void GuardStrike_RestrictedToFrontlineRanks()
         {
             var provider = UnityEditor.AssetDatabase.LoadAssetAtPath<TestCombatDataProvider>(TestDataPath);
-            var shieldBash = provider.GetSkill("shield_bash");
-            Assert.That(shieldBash.ValidUserRanks, Is.EquivalentTo(new[] { 1, 2 }));
-            Assert.That(shieldBash.ValidTargetRanks, Is.EquivalentTo(new[] { 1, 2 }));
+            var guardStrike = provider.GetSkill("skill.guardian.guard_strike");
+            Assert.That(guardStrike.ValidUserRanks, Is.EquivalentTo(new[] { 1, 2 }));
+            Assert.That(guardStrike.ValidTargetRanks, Is.EquivalentTo(new[] { 1, 2 }));
         }
 
         [Test]
@@ -267,6 +303,22 @@ namespace DungeonCrawler.Tests.EditMode
             Assert.That(boss.MaxHp, Is.EqualTo(bossDef.BaseStats.MaxHp));
             Assert.That(boss.CurrentHp, Is.EqualTo(bossDef.BaseStats.MaxHp));
             Assert.That(boss.Attack, Is.EqualTo(bossDef.BaseStats.Attack));
+        }
+
+        private static void AssertStartingSkills(
+            TestCombatDataProvider provider,
+            string heroId,
+            params string[] expectedSkillIds)
+        {
+            var hero = provider.GetHero(heroId);
+            Assert.That(hero, Is.Not.Null);
+            Assert.That(hero.StartingSkills, Has.Length.EqualTo(expectedSkillIds.Length));
+
+            for (var i = 0; i < expectedSkillIds.Length; i++)
+            {
+                Assert.That(hero.StartingSkills[i], Is.Not.Null, $"{heroId} skill {i} should be assigned");
+                Assert.That(hero.StartingSkills[i].Id, Is.EqualTo(expectedSkillIds[i]));
+            }
         }
     }
 }

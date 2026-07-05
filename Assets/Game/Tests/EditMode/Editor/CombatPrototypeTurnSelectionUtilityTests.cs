@@ -61,6 +61,14 @@ namespace DungeonCrawler.Tests.EditMode
             Assert.That(CombatPrototypeTurnSelectionUtility.IsValidBasicAttackTarget(attacker, ally), Is.False);
         }
 
+        [Test]
+        public void ShouldLimitCombatToSingleEnemy_OnlyBeforeFloorFive()
+        {
+            Assert.That(CombatPrototypeScreen.ShouldLimitCombatToSingleEnemy(1), Is.True);
+            Assert.That(CombatPrototypeScreen.ShouldLimitCombatToSingleEnemy(4), Is.True);
+            Assert.That(CombatPrototypeScreen.ShouldLimitCombatToSingleEnemy(5), Is.False);
+        }
+
         private static CombatantState CreateCombatant(string id, CombatSide side, int rank, int maxHp)
         {
             return new CombatantState(

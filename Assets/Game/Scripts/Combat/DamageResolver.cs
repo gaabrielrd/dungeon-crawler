@@ -6,15 +6,35 @@ namespace DungeonCrawler.Combat
     {
         public DamageResult Resolve(CombatAction action)
         {
-            if (action.Type != CombatActionType.BasicAttack)
+            switch (action.Type)
             {
-                throw new InvalidOperationException($"Unsupported combat action '{action.Type}'.");
+                case CombatActionType.BasicAttack:
+                    return ResolveBasicAttack(action.Actor, action.Target);
+                case CombatActionType.Skill:
+                    return ResolveSkillAttack(action.Actor, action.Target, action.DamageMultiplier);
+                default:
+                    throw new InvalidOperationException($"Unsupported combat action '{action.Type}'.");
             }
-
-            return ResolveBasicAttack(action.Actor, action.Target);
         }
 
         public DamageResult ResolveBasicAttack(CombatantState attacker, CombatantState target)
+        {
+            return ResolveAttack(attacker, target, 1f, "Basic attacks must target an opposing side.");
+        }
+
+        public DamageResult ResolveSkillAttack(
+            CombatantState attacker,
+            CombatantState target,
+            float damageMultiplier)
+        {
+            return ResolveAttack(attacker, target, damageMultiplier, null);
+        }
+
+        private DamageResult ResolveAttack(
+            CombatantState attacker,
+            CombatantState target,
+            float damageMultiplier,
+            string sideGuardMessage)
         {
             if (attacker == null)
             {
@@ -36,13 +56,14 @@ namespace DungeonCrawler.Combat
                 throw new InvalidOperationException("Dead combatants cannot be targeted.");
             }
 
-            if (attacker.Side == target.Side)
+            if (sideGuardMessage != null && attacker.Side == target.Side)
             {
-                throw new InvalidOperationException("Basic attacks must target an opposing side.");
+                throw new InvalidOperationException(sideGuardMessage);
             }
 
             var targetHpBefore = target.CurrentHp;
-            var damage = Math.Max(1, attacker.Attack - target.Defense);
+            var baseDamage = Math.Max(1, attacker.Attack - target.Defense);
+            var damage = damageMultiplier <= 0f ? 0 : Math.Max(1, (int)(baseDamage * damageMultiplier));
             target.CurrentHp -= damage;
 
             return new DamageResult(attacker, target, damage, targetHpBefore, target.CurrentHp);

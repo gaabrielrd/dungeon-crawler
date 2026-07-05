@@ -19,6 +19,7 @@ namespace DungeonCrawler.UI
         [SerializeField] private Button backToMainMenuButton;
         [SerializeField] private Sprite[] playerPortraits;
         [SerializeField] private Sprite[] enemyPortraits;
+        [SerializeField] private Sprite basicStrikeIcon;
         [SerializeField] private TestCombatDataProvider testData;
 
         private CombatController _combatController;
@@ -36,17 +37,22 @@ namespace DungeonCrawler.UI
         private Text _turnText;
         private Text _statusText;
         private Text _resultText;
-        private Button _basicAttackButton;
         private Button _nextFloorButton;
         private readonly List<CombatantSlotView> _playerSlots = new List<CombatantSlotView>();
         private readonly List<CombatantSlotView> _enemySlots = new List<CombatantSlotView>();
         private readonly Dictionary<CombatantState, CombatantSlotView> _slotsByCombatant = new Dictionary<CombatantState, CombatantSlotView>();
+        private Dictionary<string, HeroClassDefinition> _classDefsByHeroId;
+        private SkillDefinition _activeSkillDefinition;
+        private RectTransform _skillButtonsContainer;
+        private readonly List<Button> _skillButtons = new List<Button>();
 
-        private static readonly Color EmptySlotColor = new Color(0.15f, 0.16f, 0.19f, 0.92f);
-        private static readonly Color PlayerSlotColor = new Color(0.18f, 0.33f, 0.52f, 0.95f);
-        private static readonly Color EnemySlotColor = new Color(0.52f, 0.20f, 0.20f, 0.95f);
-        private static readonly Color HighlightColor = new Color(0.95f, 0.72f, 0.28f, 0.96f);
-        private static readonly Color ActiveTurnColor = new Color(0.26f, 0.64f, 0.28f, 0.96f);
+        private static readonly Color ClearSlotColor = new Color(1f, 1f, 1f, 0f);
+        private static readonly Color PlayerHpColor = new Color(0.2f, 0.78f, 0.32f, 1f);
+        private static readonly Color EnemyHpColor = new Color(0.86f, 0.18f, 0.18f, 1f);
+        private static readonly Color ExpColor = new Color(0.3f, 0.56f, 0.95f, 1f);
+        private static readonly Color BarBackgroundColor = new Color(0.04f, 0.05f, 0.06f, 0.82f);
+        private static readonly Color HighlightColor = new Color(0.95f, 0.72f, 0.28f, 0.26f);
+        private static readonly Color ActiveTurnColor = new Color(0.26f, 0.64f, 0.28f, 0.24f);
         private static readonly Color DisabledTextColor = new Color(0.75f, 0.75f, 0.75f, 0.95f);
         private static readonly Color EnabledTextColor = new Color(1f, 1f, 1f, 0.98f);
 
@@ -85,10 +91,7 @@ namespace DungeonCrawler.UI
                 backToMainMenuButton.onClick.RemoveListener(navigator.GoToMainMenu);
             }
 
-            if (_basicAttackButton != null)
-            {
-                _basicAttackButton.onClick.RemoveListener(OnBasicAttackPressed);
-            }
+            ClearSkillButtons();
 
             if (_nextFloorButton != null)
             {
@@ -217,6 +220,7 @@ namespace DungeonCrawler.UI
 
             ServiceRegistry.TryResolve<IDungeonRunService>(out _dungeonRunService);
             ConfigureRunThemeFromTestDataIfNeeded();
+            BuildClassDefsDictionary();
 
             _formation = CreateDefaultFormation();
             BindFormationToSlots();
@@ -360,7 +364,7 @@ namespace DungeonCrawler.UI
             var enemy = ResolveEnemyDefinitionForCurrentFloor();
             if (enemy != null)
             {
-                AddEnemyDefinitionToFormation(formation, enemy);
+                AddEnemyDefinitionToFormation(formation, enemy, ShouldLimitCurrentCombatToSingleEnemy());
                 return;
             }
 
@@ -410,13 +414,13 @@ namespace DungeonCrawler.UI
         {
             if (_dungeonRunService == null || !_dungeonRunService.HasActiveRun)
             {
-                return "Tap Basic Attack, then tap a valid enemy target.";
+                return "Choose a skill, then tap a valid target.";
             }
 
             var floor = _dungeonRunService.ActiveRun.CurrentFloorInfo;
             if (floor == null)
             {
-                return "Tap Basic Attack, then tap a valid enemy target.";
+                return "Choose a skill, then tap a valid target.";
             }
 
             var themeName = string.Empty;
@@ -439,8 +443,29 @@ namespace DungeonCrawler.UI
             return label;
         }
 
-        private static void AddEnemyDefinitionToFormation(CombatFormationState formation, EnemyDefinition enemy)
+        private bool ShouldLimitCurrentCombatToSingleEnemy()
         {
+            return _dungeonRunService != null
+                && _dungeonRunService.HasActiveRun
+                && ShouldLimitCombatToSingleEnemy(_dungeonRunService.ActiveRun.CurrentFloor);
+        }
+
+        public static bool ShouldLimitCombatToSingleEnemy(int floorNumber)
+        {
+            return floorNumber > 0 && floorNumber < 5;
+        }
+
+        private static void AddEnemyDefinitionToFormation(
+            CombatFormationState formation,
+            EnemyDefinition enemy,
+            bool singleEnemyOnly = false)
+        {
+            if (singleEnemyOnly)
+            {
+                formation.AddCombatant(CombatantStateFactory.CreateEnemy(enemy, CombatRank.Front));
+                return;
+            }
+
             var occupiedRanks = enemy.OccupiedRanks;
             if (occupiedRanks != null && occupiedRanks.Length > 0)
             {
@@ -580,7 +605,7 @@ namespace DungeonCrawler.UI
             layoutElement.minHeight = 100;
 
             var slotImage = slotRoot.gameObject.AddComponent<Image>();
-            slotImage.color = EmptySlotColor;
+            slotImage.color = ClearSlotColor;
 
             var button = slotRoot.gameObject.AddComponent<Button>();
             button.transition = Selectable.Transition.ColorTint;
@@ -588,19 +613,54 @@ namespace DungeonCrawler.UI
 
             var slotLayout = slotRoot.gameObject.AddComponent<VerticalLayoutGroup>();
             slotLayout.padding = new RectOffset(2, 2, 1, 2);
-            slotLayout.spacing = 1;
+            slotLayout.spacing = 3;
             slotLayout.childAlignment = TextAnchor.MiddleCenter;
             slotLayout.childControlHeight = true;
             slotLayout.childControlWidth = true;
-            slotLayout.childForceExpandHeight = true;
+            slotLayout.childForceExpandHeight = false;
             slotLayout.childForceExpandWidth = true;
 
+            var hpFill = CreateBar("HP Bar", slotLayout.transform, side == CombatSide.Player ? PlayerHpColor : EnemyHpColor);
+            var expFill = side == CombatSide.Player
+                ? CreateBar("EXP Bar", slotLayout.transform, ExpColor)
+                : null;
             var portraitImage = CreatePortrait(slotLayout.transform);
-            var hpText = CreateLabel("HP --/--", slotLayout.transform, 10, TextAnchor.MiddleCenter);
 
-            var slot = new CombatantSlotView(side, rank, slotRoot, button, portraitImage, null, hpText, null);
+            var slot = new CombatantSlotView(
+                side,
+                rank,
+                slotRoot,
+                button,
+                portraitImage,
+                hpFill,
+                expFill,
+                GetExpProgressForCombatant);
             button.onClick.AddListener(() => OnCombatantSlotClicked(slot));
             target.Add(slot);
+        }
+
+        private static Image CreateBar(string name, Transform parent, Color fillColor)
+        {
+            var background = CreateRectTransform(name, parent);
+            var backgroundImage = background.gameObject.AddComponent<Image>();
+            backgroundImage.color = BarBackgroundColor;
+
+            var layout = background.gameObject.AddComponent<LayoutElement>();
+            layout.preferredHeight = 8;
+            layout.minHeight = 8;
+            layout.flexibleWidth = 1;
+
+            var fill = CreateRectTransform("Fill", background);
+            StretchToFill(fill);
+            var fillImage = fill.gameObject.AddComponent<Image>();
+            fillImage.color = fillColor;
+            fillImage.type = Image.Type.Filled;
+            fillImage.fillMethod = Image.FillMethod.Horizontal;
+            fillImage.fillOrigin = (int)Image.OriginHorizontal.Left;
+            fillImage.fillAmount = 1f;
+            fillImage.raycastTarget = false;
+
+            return fillImage;
         }
 
         private static Image CreatePortrait(Transform parent)
@@ -671,8 +731,18 @@ namespace DungeonCrawler.UI
             var sectionSize = section.gameObject.AddComponent<LayoutElement>();
             sectionSize.preferredHeight = 96;
 
-            _basicAttackButton = CreateTextButton("Basic Attack", section, OnBasicAttackPressed);
-            _basicAttackButton.interactable = false;
+            _skillButtonsContainer = CreateRectTransform("Skill Buttons", section);
+            var skillLayout = _skillButtonsContainer.gameObject.AddComponent<HorizontalLayoutGroup>();
+            skillLayout.spacing = 12;
+            skillLayout.childAlignment = TextAnchor.MiddleCenter;
+            skillLayout.childControlHeight = false;
+            skillLayout.childControlWidth = false;
+            skillLayout.childForceExpandHeight = false;
+            skillLayout.childForceExpandWidth = false;
+
+            var skillSize = _skillButtonsContainer.gameObject.AddComponent<LayoutElement>();
+            skillSize.preferredHeight = 72;
+            skillSize.flexibleWidth = 1;
         }
 
         private void CreateResultOverlay()
@@ -734,6 +804,41 @@ namespace DungeonCrawler.UI
             return source[index];
         }
 
+        private float GetExpProgressForCombatant(CombatantState combatant)
+        {
+            var hero = FindRosterHero(combatant);
+            if (hero == null || hero.IsMaxLevel)
+            {
+                return hero == null ? 0f : 1f;
+            }
+
+            return hero.XpToNextLevel <= 0
+                ? 0f
+                : Mathf.Clamp01((float)hero.CurrentXp / hero.XpToNextLevel);
+        }
+
+        private DungeonCrawler.Data.State.HeroState FindRosterHero(CombatantState combatant)
+        {
+            var roster = _dungeonRunService?.ActiveRun?.Roster;
+            if (combatant == null || roster == null)
+            {
+                return null;
+            }
+
+            for (var i = 0; i < roster.Count; i++)
+            {
+                var hero = roster[i];
+                if (hero != null
+                    && hero.ClassId == combatant.DefinitionId
+                    && hero.PartyRank == combatant.Rank)
+                {
+                    return hero;
+                }
+            }
+
+            return null;
+        }
+
 #if UNITY_EDITOR
         private void AutoLoadPortraitsInEditor()
         {
@@ -760,6 +865,11 @@ namespace DungeonCrawler.UI
                     var enemyPath = $"Assets/Game/Art/Enemies/enemy_{index + 1}.png";
                     enemyPortraits[index] = LoadSpriteFromPath(enemyPath);
                 }
+            }
+
+            if (basicStrikeIcon == null)
+            {
+                basicStrikeIcon = LoadSpriteFromPath("Assets/Game/Art/Skills/basic_strike.png");
             }
         }
 
@@ -806,6 +916,7 @@ namespace DungeonCrawler.UI
                 return;
             }
 
+            _activeSkillDefinition = null;
             _awaitingTargetSelection = true;
             _statusText.text = "Select an enemy target.";
             RefreshTargetSelectionVisuals();
@@ -818,23 +929,52 @@ namespace DungeonCrawler.UI
                 return;
             }
 
-            if (!CombatPrototypeTurnSelectionUtility.IsValidBasicAttackTarget(_combatController.CurrentCombatant, slot.Combatant))
+            if (_activeSkillDefinition != null)
             {
-                _statusText.text = "Invalid target for a basic attack.";
-                return;
-            }
+                var validation = _combatController.ValidateSkillTargetForCurrentCombatant(
+                    _activeSkillDefinition, slot.Combatant);
+                if (!validation.IsValid)
+                {
+                    _statusText.text = validation.ErrorMessage;
+                    return;
+                }
 
-            _awaitingTargetSelection = false;
+                _awaitingTargetSelection = false;
+                var skill = _activeSkillDefinition;
+                _activeSkillDefinition = null;
 
-            try
-            {
-                var result = _combatController.ExecuteBasicAttack(slot.Combatant);
-                _statusText.text = $"{result.Attacker.DisplayName} dealt {result.Damage} to {result.Target.DisplayName}.";
+                try
+                {
+                    var result = _combatController.ExecuteSkill(skill, slot.Combatant);
+                    _statusText.text = $"{result.Attacker.DisplayName} used {skill.DisplayName} on {result.Target.DisplayName} for {result.Damage}.";
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogException(exception, this);
+                    _statusText.text = "Skill execution failed.";
+                }
             }
-            catch (Exception exception)
+            else
             {
-                Debug.LogException(exception, this);
-                _statusText.text = "Attack failed.";
+                if (!CombatPrototypeTurnSelectionUtility.IsValidBasicAttackTarget(
+                    _combatController.CurrentCombatant, slot.Combatant))
+                {
+                    _statusText.text = "Invalid target for a basic attack.";
+                    return;
+                }
+
+                _awaitingTargetSelection = false;
+
+                try
+                {
+                    var result = _combatController.ExecuteBasicAttack(slot.Combatant);
+                    _statusText.text = $"{result.Attacker.DisplayName} dealt {result.Damage} to {result.Target.DisplayName}.";
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogException(exception, this);
+                    _statusText.text = "Attack failed.";
+                }
             }
 
             RefreshTargetSelectionVisuals();
@@ -853,6 +993,15 @@ namespace DungeonCrawler.UI
         private void OnTurnStarted(TurnStartedEvent gameEvent)
         {
             RefreshAllVisuals();
+
+            if (gameEvent.State == CombatState.PlayerTurn)
+            {
+                RebuildSkillButtonsForCurrentHero();
+            }
+            else
+            {
+                ClearSkillButtons();
+            }
 
             if (gameEvent.State == CombatState.EnemyTurn)
             {
@@ -923,6 +1072,8 @@ namespace DungeonCrawler.UI
         private void OnCombatEnded(CombatEndedEvent gameEvent)
         {
             _awaitingTargetSelection = false;
+            _activeSkillDefinition = null;
+            ClearSkillButtons();
             RefreshAllVisuals();
             if (gameEvent.ResultState == CombatState.Victory)
             {
@@ -1076,25 +1227,38 @@ namespace DungeonCrawler.UI
                 && _combatController.CurrentCombatant != null
                 && _combatController.CurrentCombatant.IsAlive;
 
-            var playerTargets = _combatController == null
-                ? new List<CombatantState>()
-                : CombatPrototypeTurnSelectionUtility.GetValidBasicAttackTargets(_combatController.CurrentCombatant, _formation.Combatants);
-
-            for (var index = 0; index < _enemySlots.Count; index++)
+            List<CombatantState> validTargets;
+            if (_activeSkillDefinition != null)
             {
-                var slot = _enemySlots[index];
-                var selectable = _awaitingTargetSelection && playerCanAct && slot.Combatant != null && playerTargets.Contains(slot.Combatant);
-                slot.SetSelectable(selectable);
-                slot.SetHighlighted(selectable);
+                var skillTargets = _combatController != null
+                    ? _combatController.GetValidTargetsForCurrentCombatant(_activeSkillDefinition)
+                    : null;
+                validTargets = skillTargets != null
+                    ? new List<CombatantState>(skillTargets)
+                    : new List<CombatantState>();
+            }
+            else
+            {
+                validTargets = _combatController == null
+                    ? new List<CombatantState>()
+                    : CombatPrototypeTurnSelectionUtility.GetValidBasicAttackTargets(
+                        _combatController.CurrentCombatant, _formation.Combatants);
             }
 
-            for (var index = 0; index < _playerSlots.Count; index++)
+            foreach (var pair in _slotsByCombatant)
             {
-                _playerSlots[index].SetSelectable(false);
-                _playerSlots[index].SetHighlighted(false);
+                var selectable = _awaitingTargetSelection
+                    && playerCanAct
+                    && pair.Key.IsAlive
+                    && validTargets.Contains(pair.Key);
+                pair.Value.SetSelectable(selectable);
+                pair.Value.SetHighlighted(selectable);
             }
 
-            _basicAttackButton.interactable = playerCanAct && !_awaitingTargetSelection;
+            for (var index = 0; index < _skillButtons.Count; index++)
+            {
+                _skillButtons[index].interactable = playerCanAct && !_awaitingTargetSelection;
+            }
         }
 
         private void SetResultVisible(bool visible, string text, bool showNextFloor = false)
@@ -1128,6 +1292,9 @@ namespace DungeonCrawler.UI
                 _formation = null;
                 _isCombatInitialized = false;
                 _awaitingTargetSelection = false;
+                _activeSkillDefinition = null;
+                _classDefsByHeroId = null;
+                ClearSkillButtons();
                 SetResultVisible(false, string.Empty);
                 InitializeCombat();
             }
@@ -1200,14 +1367,149 @@ namespace DungeonCrawler.UI
             rectTransform.offsetMax = Vector2.zero;
         }
 
+        private void BuildClassDefsDictionary()
+        {
+            if (testData == null || testData.HeroDefinitions == null || testData.HeroDefinitions.Length == 0)
+            {
+                return;
+            }
+
+            _classDefsByHeroId = new Dictionary<string, HeroClassDefinition>();
+            var defs = testData.HeroDefinitions;
+            for (var i = 0; i < defs.Length; i++)
+            {
+                var def = defs[i];
+                if (def != null && !string.IsNullOrEmpty(def.Id) && !_classDefsByHeroId.ContainsKey(def.Id))
+                {
+                    _classDefsByHeroId[def.Id] = def;
+                }
+            }
+        }
+
+        private void RebuildSkillButtonsForCurrentHero()
+        {
+            ClearSkillButtons();
+
+            if (_skillButtonsContainer == null
+                || _combatController?.CurrentCombatant == null
+                || _combatController.CurrentCombatant.Side != CombatSide.Player)
+            {
+                return;
+            }
+
+            var skills = GetSkillsForCombatant(_combatController.CurrentCombatant);
+            if (skills == null || skills.Length == 0)
+            {
+                return;
+            }
+
+            for (var i = 0; i < skills.Length; i++)
+            {
+                var skill = skills[i];
+                if (skill == null) continue;
+                var button = CreateSkillButton(skill, _skillButtonsContainer);
+                _skillButtons.Add(button);
+            }
+        }
+
+        private void ClearSkillButtons()
+        {
+            _activeSkillDefinition = null;
+            for (var i = 0; i < _skillButtons.Count; i++)
+            {
+                if (_skillButtons[i] != null)
+                {
+                    Destroy(_skillButtons[i].gameObject);
+                }
+            }
+            _skillButtons.Clear();
+        }
+
+        private SkillDefinition[] GetSkillsForCombatant(CombatantState combatant)
+        {
+            if (combatant == null)
+            {
+                return null;
+            }
+
+            if (_classDefsByHeroId != null
+                && _classDefsByHeroId.TryGetValue(combatant.DefinitionId, out var classDef))
+            {
+                return classDef.StartingSkills;
+            }
+
+            return null;
+        }
+
+        private Button CreateSkillButton(SkillDefinition skill, Transform parent)
+        {
+            var buttonRoot = CreatePanel("SkillButton", parent, new Color(0.24f, 0.36f, 0.52f, 1f));
+            var button = buttonRoot.gameObject.AddComponent<Button>();
+            button.transition = Selectable.Transition.ColorTint;
+            button.targetGraphic = buttonRoot.GetComponent<Image>();
+
+            var layout = buttonRoot.gameObject.AddComponent<LayoutElement>();
+            layout.preferredWidth = 72;
+            layout.preferredHeight = 72;
+
+            var icon = ResolveSkillIcon(skill);
+            if (icon != null)
+            {
+                var iconRect = CreateRectTransform("Icon", buttonRoot);
+                StretchToFill(iconRect);
+                var iconImage = iconRect.gameObject.AddComponent<Image>();
+                iconImage.sprite = icon;
+                iconImage.preserveAspect = true;
+                iconImage.raycastTarget = false;
+            }
+            else
+            {
+                var text = CreateLabel(skill.DisplayName, buttonRoot, 10, TextAnchor.MiddleCenter);
+                text.raycastTarget = false;
+            }
+
+            var capturedSkill = skill;
+            button.onClick.AddListener(() => OnSkillPressed(capturedSkill));
+            return button;
+        }
+
+        private Sprite ResolveSkillIcon(SkillDefinition skill)
+        {
+            if (skill == null)
+            {
+                return null;
+            }
+
+            if (skill.Icon != null)
+            {
+                return skill.Icon;
+            }
+
+            return skill.Id == "basic_strike" ? basicStrikeIcon : null;
+        }
+
+        private void OnSkillPressed(SkillDefinition skill)
+        {
+            if (_combatController == null || _combatController.State != CombatState.PlayerTurn)
+            {
+                return;
+            }
+
+            _activeSkillDefinition = skill;
+            _awaitingTargetSelection = true;
+            _statusText.text = $"Select a target for {skill.DisplayName}.";
+            RefreshTargetSelectionVisuals();
+        }
+
         private sealed class CombatantSlotView
         {
+            private readonly CombatSide _side;
             private readonly Image _background;
             private readonly Image _portrait;
-            private readonly Text _name;
-            private readonly Text _hp;
-            private readonly Text _status;
+            private readonly Image _hpFill;
+            private readonly Image _expFill;
             private readonly Button _button;
+            private readonly Func<CombatantState, float> _expResolver;
 
             public CombatantSlotView(
                 CombatSide side,
@@ -1215,9 +1517,9 @@ namespace DungeonCrawler.UI
                 RectTransform root,
                 Button button,
                 Image portrait,
-                Text name,
-                Text hp,
-                Text status)
+                Image hpFill,
+                Image expFill,
+                Func<CombatantState, float> expResolver)
             {
                 Side = side;
                 Rank = rank;
@@ -1225,9 +1527,10 @@ namespace DungeonCrawler.UI
                 _button = button;
                 _background = root.GetComponent<Image>();
                 _portrait = portrait;
-                _name = name;
-                _hp = hp;
-                _status = status;
+                _hpFill = hpFill;
+                _expFill = expFill;
+                _expResolver = expResolver;
+                _side = side;
             }
 
             public CombatSide Side { get; }
@@ -1281,26 +1584,27 @@ namespace DungeonCrawler.UI
             {
                 if (Combatant == null)
                 {
-                    if (_name != null) _name.text = $"Rank {Rank}: Empty";
-                    _hp.text = "HP --/--";
-                    if (_status != null) { _status.text = "No combatant"; _status.color = DisabledTextColor; }
-                    _background.color = EmptySlotColor;
+                    Root.gameObject.SetActive(false);
                     _button.interactable = false;
-                    _portrait.sprite = null;
-                    _portrait.color = new Color(1f, 1f, 1f, 0f);
                     return;
                 }
 
-                if (_name != null) _name.text = $"R{Combatant.Rank} {Combatant.DisplayName}";
-                _hp.text = $"HP {Combatant.CurrentHp}/{Combatant.MaxHp}";
-                if (_status != null) { _status.text = Combatant.IsAlive ? "Alive" : "Defeated"; _status.color = Combatant.IsAlive ? EnabledTextColor : DisabledTextColor; }
+                Root.gameObject.SetActive(true);
+                _hpFill.fillAmount = Combatant.MaxHp <= 0
+                    ? 0f
+                    : Mathf.Clamp01((float)Combatant.CurrentHp / Combatant.MaxHp);
+
+                if (_expFill != null)
+                {
+                    _expFill.transform.parent.gameObject.SetActive(_side == CombatSide.Player);
+                    _expFill.fillAmount = _expResolver == null ? 0f : _expResolver(Combatant);
+                }
 
                 _portrait.sprite = Portrait;
                 _portrait.color = Portrait == null
                     ? new Color(1f, 1f, 1f, 0.15f)
                     : new Color(1f, 1f, 1f, Combatant.IsAlive ? 1f : 0.55f);
 
-                var baseColor = Side == CombatSide.Player ? PlayerSlotColor : EnemySlotColor;
                 if (IsActiveTurn)
                 {
                     _background.color = ActiveTurnColor;
@@ -1311,12 +1615,12 @@ namespace DungeonCrawler.UI
                 }
                 else
                 {
-                    _background.color = baseColor;
+                    _background.color = ClearSlotColor;
                 }
 
                 if (!Combatant.IsAlive)
                 {
-                    _background.color = Color.Lerp(_background.color, Color.black, 0.45f);
+                    _background.color = ClearSlotColor;
                     _button.interactable = false;
                 }
                 else

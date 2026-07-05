@@ -13,14 +13,21 @@ MonoBehaviour:
   m_Name: test_combat_data
   m_EditorClassIdentifier: Assembly-CSharp::DungeonCrawler.UI.TestCombatDataProvider
   heroDefinitions:
-  - {fileID: 11400000, guid: b5c51138987eb9f49b1ac4a0be12671b, type: 2}
-  - {fileID: 11400000, guid: c3a1ff312d356eb468531d933ab03226, type: 2}
-  - {fileID: 11400000, guid: 6e8ce926eb859aa43afeaa702a96021b, type: 2}
-  - {fileID: 11400000, guid: c3b128ca8f8d2984fb7e873bf041db43, type: 2}
+  - {fileID: 11400000, guid: 60d78d2375dfea049a5e64e73fd099b9, type: 2}
+  - {fileID: 11400000, guid: 5b2702ee2e2a988419849175513c6e85, type: 2}
+  - {fileID: 11400000, guid: bebabbccf46c2a241bfdf6f2c9a9055e, type: 2}
+  - {fileID: 11400000, guid: bb52696f9901ea745917c2b4de047bcc, type: 2}
   enemyDefinitions:
   - {fileID: 11400000, guid: 7e5ac265860f1d94297f7a93fafea863, type: 2}
   bossDefinitions:
   - {fileID: 11400000, guid: bc04fda89a719ac4a8ad3d0397eeda9f, type: 2}
   skillDefinitions:
   - {fileID: 11400000, guid: 0c7a19b706665fb4f81730ed49bdee5b, type: 2}
-  - {fileID: 11400000, guid: c4ff74b53bfddc647a99664d502eec77, type: 2}
+  - {fileID: 11400000, guid: 10000000000000000000000000000001, type: 2}
+  - {fileID: 11400000, guid: 10000000000000000000000000000002, type: 2}
+  - {fileID: 11400000, guid: 10000000000000000000000000000003, type: 2}
+  - {fileID: 11400000, guid: 10000000000000000000000000000004, type: 2}
+  - {fileID: 11400000, guid: 10000000000000000000000000000005, type: 2}
+  - {fileID: 11400000, guid: 10000000000000000000000000000006, type: 2}
+  - {fileID: 11400000, guid: 10000000000000000000000000000007, type: 2}
+  - {fileID: 11400000, guid: 10000000000000000000000000000008, type: 2}

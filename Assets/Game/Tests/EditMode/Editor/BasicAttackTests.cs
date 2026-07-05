@@ -53,6 +53,19 @@ namespace DungeonCrawler.Tests.EditMode
         }
 
         [Test]
+        public void ZeroMultiplierSkillDoesNotDamageTarget()
+        {
+            var attacker = CreateCombatant("attacker", CombatSide.Player, rank: 1, speed: 1, maxHp: 20, attack: 8, defense: 1);
+            var target = CreateCombatant("target", CombatSide.Player, rank: 2, speed: 1, maxHp: 20, attack: 3, defense: 1);
+            var resolver = new DamageResolver();
+
+            var result = resolver.ResolveSkillAttack(attacker, target, 0f);
+
+            Assert.That(result.Damage, Is.Zero);
+            Assert.That(target.CurrentHp, Is.EqualTo(20));
+        }
+
+        [Test]
         public void BasicAttackDoesNotReduceHpBelowZero()
         {
             var attacker = CreateCombatant("attacker", CombatSide.Player, rank: 1, speed: 1, maxHp: 20, attack: 50, defense: 1);

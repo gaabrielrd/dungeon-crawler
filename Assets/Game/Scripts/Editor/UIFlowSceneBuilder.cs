@@ -33,10 +33,11 @@ namespace DungeonCrawler.EditorTools
             var screen = CreateBaseScene<MainMenuScreen>(
                 "MainMenu",
                 "Main Menu",
-                "Entry point for starting runs and opening global settings.");
+                "Entry point for starting runs and opening global settings.",
+                includeLabels: false);
 
-            var startRunButton = CreateButton(screen.ContentRoot, "Start Run Button", "Start Run", new Vector2(0f, 120f));
-            var settingsButton = CreateButton(screen.ContentRoot, "Settings Button", "Settings", new Vector2(0f, -20f));
+            var startRunButton = CreateButton(screen.ContentRoot, "Start Run Button", "Start Run", new Vector2(0f, 80f));
+            var settingsButton = CreateButton(screen.ContentRoot, "Settings Button", "Settings", new Vector2(0f, -60f));
 
             SetObjectReference(screen.Screen, "startRunButton", startRunButton);
             SetObjectReference(screen.Screen, "settingsButton", settingsButton);
@@ -49,13 +50,8 @@ namespace DungeonCrawler.EditorTools
             var screen = CreateBaseScene<RunPreparationScreen>(
                 "RunPreparation",
                 "Run Preparation",
-                "Future home for party, loadout, dungeon seed, and run modifier selection.");
-
-            var startCombatButton = CreateButton(screen.ContentRoot, "Start Combat Prototype Button", "Start Combat Prototype", new Vector2(0f, 120f));
-            var backButton = CreateButton(screen.ContentRoot, "Back Button", "Back", new Vector2(0f, -20f));
-
-            SetObjectReference(screen.Screen, "startCombatButton", startCombatButton);
-            SetObjectReference(screen.Screen, "backButton", backButton);
+                "Select your party to start the run.",
+                includeLabels: false);
 
             SaveScene("RunPreparation");
         }
@@ -91,7 +87,8 @@ namespace DungeonCrawler.EditorTools
         private static SceneBuildContext<TScreen> CreateBaseScene<TScreen>(
             string sceneName,
             string title,
-            string description)
+            string description,
+            bool includeLabels = true)
             where TScreen : UIScreen
         {
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
@@ -140,8 +137,11 @@ namespace DungeonCrawler.EditorTools
             contentRect.anchoredPosition = Vector2.zero;
             contentRect.sizeDelta = new Vector2(860f, 760f);
 
-            CreateText(contentRect, "Title", title, 58, FontStyle.Bold, new Vector2(0f, 250f), new Vector2(860f, 100f));
-            CreateText(contentRect, "Purpose Text", description, 32, FontStyle.Normal, new Vector2(0f, 160f), new Vector2(760f, 120f));
+            if (includeLabels)
+            {
+                CreateText(contentRect, "Title", title, 58, FontStyle.Bold, new Vector2(0f, 250f), new Vector2(860f, 100f));
+                CreateText(contentRect, "Purpose Text", description, 32, FontStyle.Normal, new Vector2(0f, 160f), new Vector2(760f, 120f));
+            }
 
             return new SceneBuildContext<TScreen>(screen, contentRect);
         }

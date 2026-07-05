@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using DungeonCrawler.Combat;
 using DungeonCrawler.Core.Services;
+using DungeonCrawler.Data.Definitions;
 using DungeonCrawler.Dungeon;
 using DungeonCrawler.UI;
 using NUnit.Framework;
@@ -69,21 +70,24 @@ namespace DungeonCrawler.Tests.EditMode
         public void RunPreparationStartCombatButtonNavigatesToCombatPrototype()
         {
             var sceneLoader = new MockSceneLoaderService();
+            var dungeonRunService = new MockDungeonRunService();
             ServiceRegistry.Register<ISceneLoaderService>(sceneLoader);
+            ServiceRegistry.Register<IDungeonRunService>(dungeonRunService);
 
             var fixture = CreateScreenFixture<RunPreparationScreen>();
-            var startCombatButton = CreateButton("Start Combat Button");
-            var backButton = CreateButton("Back Button");
+            var testData = CreateMockTestData();
 
-            SetObjectReference(fixture.Screen, "startCombatButton", startCombatButton);
-            SetObjectReference(fixture.Screen, "backButton", backButton);
+            SetObjectReference(fixture.Screen, "testData", testData);
+            SetPrivateField(fixture.Screen, "heroPortraits", new Sprite[0]);
 
             EnableFixture(fixture);
-            startCombatButton.onClick.Invoke();
+
+            SetPrivateField(fixture.Screen, "_selected", new[] { true, true, false, false });
+            InvokePrivateMethod(fixture.Screen, "OnStartRunPressed");
 
             Assert.That(sceneLoader.LastLoadedSceneName, Is.EqualTo("CombatPrototype"));
 
-            DestroyFixture(fixture.Root, startCombatButton.gameObject, backButton.gameObject);
+            DestroyFixture(fixture.Root);
         }
 
         [Test]
@@ -95,19 +99,20 @@ namespace DungeonCrawler.Tests.EditMode
             ServiceRegistry.Register<IDungeonRunService>(dungeonRunService);
 
             var fixture = CreateScreenFixture<RunPreparationScreen>();
-            var startCombatButton = CreateButton("Start Combat Button");
-            var backButton = CreateButton("Back Button");
+            var testData = CreateMockTestData();
 
-            SetObjectReference(fixture.Screen, "startCombatButton", startCombatButton);
-            SetObjectReference(fixture.Screen, "backButton", backButton);
+            SetObjectReference(fixture.Screen, "testData", testData);
+            SetPrivateField(fixture.Screen, "heroPortraits", new Sprite[0]);
 
             EnableFixture(fixture);
-            startCombatButton.onClick.Invoke();
+
+            SetPrivateField(fixture.Screen, "_selected", new[] { true, true, false, false });
+            InvokePrivateMethod(fixture.Screen, "OnStartRunPressed");
 
             Assert.That(dungeonRunService.StartRunCallCount, Is.EqualTo(1));
             Assert.That(sceneLoader.LastLoadedSceneName, Is.EqualTo("CombatPrototype"));
 
-            DestroyFixture(fixture.Root, startCombatButton.gameObject, backButton.gameObject);
+            DestroyFixture(fixture.Root);
         }
 
         [Test]
@@ -170,6 +175,31 @@ namespace DungeonCrawler.Tests.EditMode
             return gameObject.AddComponent<Button>();
         }
 
+        private static TestCombatDataProvider CreateMockTestData()
+        {
+            var provider = ScriptableObject.CreateInstance<TestCombatDataProvider>();
+            var heroDefs = new HeroClassDefinition[4];
+
+            for (var i = 0; i < 4; i++)
+            {
+                var def = ScriptableObject.CreateInstance<HeroClassDefinition>();
+                var bindingFlags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+
+                typeof(GameDefinition).GetField("id", bindingFlags)?.SetValue(def, $"hero_{i}");
+                typeof(GameDefinition).GetField("displayName", bindingFlags)?.SetValue(def, $"Hero {i}");
+                typeof(HeroClassDefinition).GetField("baseStats", bindingFlags)?.SetValue(
+                    def, new CombatStats(20 + i * 5, 5 + i, 2 + i, 3 + i));
+
+                heroDefs[i] = def;
+            }
+
+            typeof(TestCombatDataProvider).GetField("heroDefinitions",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                ?.SetValue(provider, heroDefs);
+
+            return provider;
+        }
+
         private static void EnableFixture<TScreen>(ScreenFixture<TScreen> fixture)
             where TScreen : UIScreen
         {
@@ -185,6 +215,19 @@ namespace DungeonCrawler.Tests.EditMode
                 | System.Reflection.BindingFlags.Public);
 
             Assert.That(field, Is.Not.Null, $"Field '{propertyName}' was not found on {target.GetType().Name}.");
+
+            field.SetValue(target, value);
+        }
+
+        private static void SetPrivateField(Object target, string fieldName, object value)
+        {
+            var field = target.GetType().GetField(
+                fieldName,
+                System.Reflection.BindingFlags.Instance
+                | System.Reflection.BindingFlags.NonPublic
+                | System.Reflection.BindingFlags.Public);
+
+            Assert.That(field, Is.Not.Null, $"Field '{fieldName}' was not found on {target.GetType().Name}.");
 
             field.SetValue(target, value);
         }

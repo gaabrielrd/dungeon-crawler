@@ -43,7 +43,7 @@ namespace DungeonCrawler.Data.State
             var stats = definition.BaseStats;
             maxHp = stats.MaxHp;
             currentHp = stats.MaxHp;
-            attack = stats.Attack;
+            attack = HeroProgressionService.GetAverageDamage(level);
             defense = stats.Defense;
             speed = stats.Speed;
 
@@ -106,7 +106,12 @@ namespace DungeonCrawler.Data.State
         {
             if (level >= HeroProgressionService.MaxLevel)
                 return;
+
             level++;
+            var hpIncrease = HeroProgressionService.GetAverageDamage(level);
+            maxHp += hpIncrease;
+            currentHp = maxHp;
+            attack = HeroProgressionService.GetAverageDamage(level);
         }
 
         public bool LearnSkill(string skillId)

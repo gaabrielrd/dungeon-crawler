@@ -33,7 +33,7 @@ namespace DungeonCrawler.Tests.EditMode
             Assert.That(hero.Level, Is.EqualTo(1));
             Assert.That(hero.MaxHp, Is.EqualTo(45));
             Assert.That(hero.CurrentHp, Is.EqualTo(45));
-            Assert.That(hero.Attack, Is.EqualTo(7));
+            Assert.That(hero.Attack, Is.EqualTo(3));
             Assert.That(hero.Defense, Is.EqualTo(10));
             Assert.That(hero.Speed, Is.EqualTo(4));
             Assert.That(hero.Rarity, Is.EqualTo(Rarity.Common));
@@ -128,7 +128,7 @@ namespace DungeonCrawler.Tests.EditMode
             Assert.That(combatant.Rank, Is.EqualTo(CombatRank.Front));
             Assert.That(combatant.MaxHp, Is.EqualTo(45));
             Assert.That(combatant.CurrentHp, Is.EqualTo(45));
-            Assert.That(combatant.Attack, Is.EqualTo(7));
+            Assert.That(combatant.Attack, Is.EqualTo(3));
             Assert.That(combatant.Defense, Is.EqualTo(10));
             Assert.That(combatant.Speed, Is.EqualTo(4));
         }
@@ -227,6 +227,9 @@ namespace DungeonCrawler.Tests.EditMode
             Assert.That(hero.Level, Is.EqualTo(2));
             Assert.That(hero.BaseAverageDamage, Is.EqualTo(5));
             Assert.That(hero.XpToNextLevel, Is.EqualTo(8));
+            Assert.That(hero.MaxHp, Is.EqualTo(50));
+            Assert.That(hero.CurrentHp, Is.EqualTo(50));
+            Assert.That(hero.Attack, Is.EqualTo(5));
         }
 
         [Test]

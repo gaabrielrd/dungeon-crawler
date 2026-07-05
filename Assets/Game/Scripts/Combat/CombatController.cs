@@ -57,6 +57,39 @@ namespace DungeonCrawler.Combat
             return result;
         }
 
+        public DamageResult ExecuteSkill(SkillDefinition skill, CombatantState target)
+        {
+            if (skill == null)
+            {
+                throw new ArgumentNullException(nameof(skill));
+            }
+
+            if (State != CombatState.PlayerTurn && State != CombatState.EnemyTurn)
+            {
+                throw new InvalidOperationException("Skills can only execute during an active combatant turn.");
+            }
+
+            if (CurrentCombatant == null)
+            {
+                throw new InvalidOperationException("There is no active combatant to execute a skill.");
+            }
+
+            var validation = _targetingRulesService.ValidateTarget(skill, CurrentCombatant, target);
+            if (!validation.IsValid)
+            {
+                throw new InvalidOperationException(validation.ErrorMessage);
+            }
+
+            var action = new CombatAction(
+                CombatActionType.Skill, CurrentCombatant, target, skill.DamageMultiplier);
+            var result = _damageResolver.Resolve(action);
+            _eventBus.Publish(new DamageResolvedEvent(result));
+            PublishDeathEventIfNeeded(result);
+            CompleteCurrentTurn();
+
+            return result;
+        }
+
         public void StartCombat()
         {
             if (State != CombatState.Initializing)

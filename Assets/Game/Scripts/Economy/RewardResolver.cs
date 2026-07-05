@@ -73,6 +73,15 @@ namespace DungeonCrawler.Economy
                 return rewards;
             }
 
+            var dropChance = context.IsBoss
+                ? definition.BossItemDropChance
+                : definition.CommonItemDropChance;
+            var dropRandom = new Random(context.CreateDeterministicSeed("item_drop"));
+            if (dropRandom.NextDouble() > dropChance)
+            {
+                return rewards;
+            }
+
             var itemRandom = new Random(context.CreateDeterministicSeed("item"));
             var roll = itemRandom.Next(0, totalWeight);
             var accumulated = 0;

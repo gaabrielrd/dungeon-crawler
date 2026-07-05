@@ -26,6 +26,8 @@ namespace DungeonCrawler.Tests.EditMode
             SetPrivateField(typeof(RewardDefinition), _rewardDefinition, "commonGoldMax", 10);
             SetPrivateField(typeof(RewardDefinition), _rewardDefinition, "bossGoldMin", 40);
             SetPrivateField(typeof(RewardDefinition), _rewardDefinition, "bossGoldMax", 40);
+            SetPrivateField(typeof(RewardDefinition), _rewardDefinition, "commonItemDropChance", 1f);
+            SetPrivateField(typeof(RewardDefinition), _rewardDefinition, "bossItemDropChance", 1f);
             SetPrivateField(typeof(RewardDefinition), _rewardDefinition, "itemRewards", new[]
             {
                 new WeightedItemRewardEntry(_potion, 1),

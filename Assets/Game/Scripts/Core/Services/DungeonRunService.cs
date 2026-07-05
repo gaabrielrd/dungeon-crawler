@@ -351,10 +351,78 @@ namespace DungeonCrawler.Core.Services
                 ActiveRun.InventorySnapshot.AddItem(item.ItemId, item.Quantity);
             }
 
+            SyncCombatPartyToRoster();
             ApplyXpToHeroes(reward.XpReward);
+            RebuildCombatPartyFromRoster();
 
             ActiveRun.LastResolvedReward = reward;
             ApplyRewardToSave(reward);
+        }
+
+        private void SyncCombatPartyToRoster()
+        {
+            var roster = ActiveRun.Roster;
+            var party = ActiveRun.Party;
+            if (roster == null || party == null)
+            {
+                return;
+            }
+
+            for (var i = 0; i < roster.Count; i++)
+            {
+                var hero = roster[i];
+                if (hero == null)
+                {
+                    continue;
+                }
+
+                var combatant = FindPartyCombatant(hero);
+                if (combatant != null)
+                {
+                    hero.SyncAfterCombat(combatant);
+                }
+            }
+        }
+
+        private void RebuildCombatPartyFromRoster()
+        {
+            var roster = ActiveRun.Roster;
+            if (roster == null || roster.Count == 0)
+            {
+                return;
+            }
+
+            var party = new List<CombatantState>();
+            for (var i = 0; i < roster.Count; i++)
+            {
+                var hero = roster[i];
+                if (hero == null || !hero.IsInParty)
+                {
+                    continue;
+                }
+
+                var rank = hero.PartyRank > 0 ? hero.PartyRank : party.Count + 1;
+                party.Add(CombatantStateFactory.CreateHeroFromState(hero, rank));
+            }
+
+            ActiveRun.Party = party;
+        }
+
+        private CombatantState FindPartyCombatant(DungeonCrawler.Data.State.HeroState hero)
+        {
+            var party = ActiveRun.Party;
+            for (var i = 0; i < party.Count; i++)
+            {
+                var combatant = party[i];
+                if (combatant != null
+                    && combatant.DefinitionId == hero.ClassId
+                    && combatant.Rank == hero.PartyRank)
+                {
+                    return combatant;
+                }
+            }
+
+            return null;
         }
 
         private void ApplyXpToHeroes(int xpAmount)

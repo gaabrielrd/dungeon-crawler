@@ -15,7 +15,7 @@ MonoBehaviour:
   id: basic_strike
   displayName: Basic Strike
   description: A basic physical attack.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: b11a5fcd65ee4eb48a4548d1c35fa8ab, type: 3}
   validUserRanks: 01000000020000000300000004000000
   validTargetRanks: 01000000020000000300000004000000
   targetType: 2
