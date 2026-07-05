@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using DungeonCrawler.Combat;
 using DungeonCrawler.Data.Definitions;
+using DungeonCrawler.Data.State;
 using DungeonCrawler.Dungeon;
 
 namespace DungeonCrawler.Core.Services
@@ -44,6 +45,13 @@ namespace DungeonCrawler.Core.Services
         public void ResetRestTaken()
         {
             HasRestTaken = false;
+        }
+
+        public IReadOnlyList<SkillDefinition> GetAvailableSkills(
+            HeroClassDefinition classDef,
+            HeroState hero)
+        {
+            return HeroProgressionService.GetAvailableSkills(classDef, hero);
         }
     }
 }

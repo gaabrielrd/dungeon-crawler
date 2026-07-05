@@ -68,6 +68,9 @@ namespace DungeonCrawler.Data.State
         public string HeroName => heroName;
         public int Level => level;
         public int CurrentXp => currentXp;
+        public int XpToNextLevel => HeroProgressionService.GetXpToNextLevel(level);
+        public int BaseAverageDamage => HeroProgressionService.GetAverageDamage(level);
+        public bool IsMaxLevel => level >= HeroProgressionService.MaxLevel;
         public int MaxHp => maxHp;
         public int CurrentHp { get => currentHp; set => currentHp = Math.Max(0, value); }
         public int Attack => attack;
@@ -96,7 +99,14 @@ namespace DungeonCrawler.Data.State
 
         public void AddXp(int amount)
         {
-            currentXp += Math.Max(0, amount);
+            currentXp = Math.Max(0, currentXp + amount);
+        }
+
+        public void LevelUp()
+        {
+            if (level >= HeroProgressionService.MaxLevel)
+                return;
+            level++;
         }
 
         public bool LearnSkill(string skillId)

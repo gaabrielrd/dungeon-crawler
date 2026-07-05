@@ -11,12 +11,25 @@ namespace DungeonCrawler.Economy
         private const int DefaultBossGoldMin = 35;
         private const int DefaultBossGoldMax = 45;
 
+        private const int XpBasePerFloor = 5;
+        private const int XpPerFloorMultiplier = 3;
+        private const float XpBossMultiplier = 1.5f;
+
         public ResolvedReward Resolve(RewardContext context, RewardDefinition definition)
         {
             var gold = ResolveGold(context, definition);
+            var xp = ResolveXp(context);
             var items = ResolveItems(context, definition);
 
-            return new ResolvedReward(gold, context.IsBoss, items);
+            return new ResolvedReward(gold, xp, context.IsBoss, items);
+        }
+
+        private static int ResolveXp(RewardContext context)
+        {
+            var xp = XpBasePerFloor + (context.FloorNumber * XpPerFloorMultiplier);
+            if (context.IsBoss)
+                xp = (int)(xp * XpBossMultiplier);
+            return Math.Max(1, xp);
         }
 
         private static int ResolveGold(RewardContext context, RewardDefinition definition)

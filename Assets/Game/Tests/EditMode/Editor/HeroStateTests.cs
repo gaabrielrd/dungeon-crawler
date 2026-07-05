@@ -197,6 +197,65 @@ namespace DungeonCrawler.Tests.EditMode
         }
 
         [Test]
+        public void BaseAverageDamage_Level1_Returns3()
+        {
+            var definition = CreateGuardianDefinition();
+            var hero = new HeroState(definition, "Aldren Voss", Rarity.Common);
+
+            Assert.That(hero.BaseAverageDamage, Is.EqualTo(3));
+        }
+
+        [Test]
+        public void XpToNextLevel_Level1_Returns5()
+        {
+            var definition = CreateGuardianDefinition();
+            var hero = new HeroState(definition, "Aldren Voss", Rarity.Common);
+
+            Assert.That(hero.XpToNextLevel, Is.EqualTo(5));
+        }
+
+        [Test]
+        public void LevelUp_IncreasesLevelAndUpdatesProperties()
+        {
+            var definition = CreateGuardianDefinition();
+            var hero = new HeroState(definition, "Aldren Voss", Rarity.Common);
+
+            hero.AddXp(5);
+            var leveledUp = HeroProgressionService.TryLevelUp(hero);
+
+            Assert.That(leveledUp, Is.True);
+            Assert.That(hero.Level, Is.EqualTo(2));
+            Assert.That(hero.BaseAverageDamage, Is.EqualTo(5));
+            Assert.That(hero.XpToNextLevel, Is.EqualTo(8));
+        }
+
+        [Test]
+        public void LevelUp_MaxLevel_DoesNotExceed10()
+        {
+            var definition = CreateGuardianDefinition();
+            var hero = new HeroState(definition, "Aldren Voss", Rarity.Common);
+
+            hero.AddXp(9999);
+            while (HeroProgressionService.TryLevelUp(hero)) { }
+
+            Assert.That(hero.Level, Is.EqualTo(10));
+            Assert.That(hero.IsMaxLevel, Is.True);
+            Assert.That(hero.BaseAverageDamage, Is.EqualTo(233));
+        }
+
+        [Test]
+        public void AddXp_NegativeAmount_DoesNotGoBelowZero()
+        {
+            var definition = CreateGuardianDefinition();
+            var hero = new HeroState(definition, "Aldren Voss", Rarity.Common);
+
+            hero.AddXp(10);
+            hero.AddXp(-15);
+
+            Assert.That(hero.CurrentXp, Is.EqualTo(0));
+        }
+
+        [Test]
         public void CreateCombatantStateFromFactoryUsesHeroStateStats()
         {
             var definition = CreateAcolyteDefinition();

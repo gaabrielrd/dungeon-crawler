@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using DungeonCrawler.Combat;
+using DungeonCrawler.Data.Definitions;
+using DungeonCrawler.Data.State;
 using DungeonCrawler.Dungeon;
 
 namespace DungeonCrawler.Core.Services
@@ -15,6 +17,10 @@ namespace DungeonCrawler.Core.Services
         void Rest(List<CombatantState> party);
 
         void ResetRestTaken();
+
+        IReadOnlyList<SkillDefinition> GetAvailableSkills(
+            HeroClassDefinition classDef,
+            HeroState hero);
     }
 
     public interface IInitializableService

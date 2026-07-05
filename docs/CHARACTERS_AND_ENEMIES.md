@@ -39,7 +39,7 @@ Rank 4: fundo
 
 ---
 
-## 2. Classes jogáveis
+## 2. Classes jogáveis e sistema de skills
 
 Para o MVP, implementar primeiro as quatro classes principais:
 
@@ -49,6 +49,74 @@ Para o MVP, implementar primeiro as quatro classes principais:
 4. Arcanista do Túmulo
 
 As classes Caçador de Relíquias e Exorcista Errante podem entrar como desbloqueáveis após os primeiros bosses.
+
+---
+
+## 2.0 Regras globais de skills
+
+```text
+Cada personagem começa com 2 skills iniciais.
+Cada personagem pode ter no máximo 4 skills equipadas ao mesmo tempo.
+Cada classe possui 6 skills disponíveis no total.
+Novas skills são aprendidas no resting site.
+Skills aprendidas podem ser melhoradas no resting site até o nível 3.
+Skills ofensivas usam a curva Fibonacci de dano.
+```
+
+### Tipos de skill
+
+```text
+Ofensiva: causa dano direto ou dano em área.
+Defensiva: cura, proteção, escudo, guard ou redução de dano.
+Buff: melhora atributos, precisão, evasão, velocidade, dano ou economia.
+Debuff: reduz atributos inimigos, aplica mark, vulnerable, slow, weak ou outros efeitos negativos.
+```
+
+### Regra de dano para skills ofensivas
+
+A potência de uma skill ofensiva usa a curva Fibonacci como multiplicador de nível de skill.
+
+| Nível da skill | Unidade Fibonacci | Multiplicador sobre dano médio do personagem |
+|---:|---:|---:|
+| 1 | 3 | 1.00x |
+| 2 | 5 | 1.67x |
+| 3 | 8 | 2.67x |
+
+Regra sugerida para implementação:
+
+```text
+baseDamage = HeroProgressionDefinition.GetAverageDamage(heroLevel)
+skillLevelMultiplier = fibonacciSkillPower[skillLevel] / 3
+skillDamage = baseDamage * skillLevelMultiplier * skillSpecificMultiplier
+```
+
+Multiplicadores específicos sugeridos:
+
+```text
+Dano leve: 0.65x
+Dano médio: 1.00x
+Dano alto: 1.25x
+Dano em área: 0.50x por alvo
+Dano com forte controle/debuff: 0.75x
+Dano multi-hit: dividir o multiplicador total entre os hits
+```
+
+### Aprendizado e melhoria no resting site
+
+```text
+Aprender nova skill: adiciona a skill à lista de skills conhecidas do personagem.
+Melhorar skill: aumenta o nível da skill de 1 para 2 ou de 2 para 3.
+Equipar skill: seleciona até 4 skills conhecidas para uso em combate.
+Desequipar skill: remove a skill da lista ativa, sem apagar progresso.
+```
+
+Regras recomendadas:
+
+```text
+Skill level 1: efeito base.
+Skill level 2: aumenta potência, duração, chance ou reduz cooldown.
+Skill level 3: melhora fortemente a identidade da skill, sem mudar sua função principal.
+```
 
 ---
 
@@ -84,17 +152,34 @@ Acessórios:
 - Relíquia sagrada
 ```
 
-## Habilidades até o nível 10
+## Skills da classe
 
-| Nível | Habilidade | Tipo | Ranks de uso | Alvos válidos | Descrição |
-|---:|---|---|---|---|---|
-| 1 | Golpe de Guarda | Ataque | 1-2 | Inimigos 1-2 | Ataque básico físico. |
-| 1 | Postura de Ferro | Defesa | 1-2 | Self | Aumenta defesa própria por 2 turnos. |
-| 2 | Investida de Escudo | Ataque/controle | 1-2 | Inimigos 1-2 | Dano leve e chance de stun. |
-| 4 | Proteger Aliado | Suporte | 1-2 | Aliados 2-4 | Redireciona parte do dano recebido por um aliado para si por 2 turnos. |
-| 6 | Juramento da Cripta | Defesa/taunt | 1-2 | Self | Aumenta defesa e força inimigos a priorizá-lo por 1 turno. |
-| 8 | Quebra-Ossos | Ataque/debuff | 1-2 | Inimigos 1-2 | Dano médio e redução de defesa do alvo. |
-| 10 | Última Muralha | Ultimate defensiva | 1-2 | Todos os aliados | Concede escudo temporário para toda a party e grande defesa para si. |
+Skills iniciais:
+
+```text
+- Golpe de Guarda
+- Postura de Ferro
+```
+
+| Skill | ID sugerido | Tipo | Inicial | Aprendizado sugerido | Ranks de uso | Alvos válidos |
+|---|---|---|---|---|---|---|
+| Golpe de Guarda | `skill.guardian.guard_strike` | Ofensiva | Sim | Inicial | 1-2 | Inimigos 1-2 |
+| Postura de Ferro | `skill.guardian.iron_stance` | Defensiva | Sim | Inicial | 1-2 | Self |
+| Investida de Escudo | `skill.guardian.shield_charge` | Ofensiva/Debuff | Não | Resting site após nível 2 | 1-2 | Inimigos 1-2 |
+| Proteger Aliado | `skill.guardian.protect_ally` | Defensiva | Não | Resting site após nível 4 | 1-2 | Aliado único |
+| Quebra-Ossos | `skill.guardian.bone_breaker` | Ofensiva/Debuff | Não | Resting site após nível 6 | 1-2 | Inimigos 1-2 |
+| Última Muralha | `skill.guardian.last_wall` | Defensiva/Buff | Não | Resting site após nível 8 | 1-2 | Todos os aliados |
+
+## Efeitos por nível de skill
+
+| Skill | Nível 1 | Nível 2 | Nível 3 |
+|---|---|---|---|
+| Golpe de Guarda | Dano médio em inimigo frontal. | Dano médio aumentado pela curva Fibonacci e +1 turno de guard leve em si. | Dano médio aumentado pela curva Fibonacci e aplica guard leve em si e no aliado mais ferido por 1 turno. |
+| Postura de Ferro | Aumenta Defense própria por 2 turnos. | Aumenta Defense e Resistance por 2 turnos. | Aumenta Defense e Resistance por 3 turnos e reduz dano crítico recebido. |
+| Investida de Escudo | Dano leve e pequena chance de stun. | Dano leve aumentado pela curva Fibonacci e chance média de stun. | Dano leve aumentado pela curva Fibonacci, chance média de stun e aplica Slow se stun falhar. |
+| Proteger Aliado | Redireciona parte do dano de um aliado para o Guardião por 1 turno. | Redireciona dano por 2 turnos e reduz parte do dano recebido. | Redireciona dano por 2 turnos, reduz dano recebido e concede shield pequeno ao aliado protegido. |
+| Quebra-Ossos | Dano médio e aplica Vulnerable por 1 turno. | Dano médio aumentado pela curva Fibonacci e aplica Vulnerable por 2 turnos. | Dano alto pela curva Fibonacci, aplica Vulnerable por 2 turnos e reduz Defense do alvo. |
+| Última Muralha | Concede shield pequeno para todos os aliados. | Concede shield médio e aumenta Defense da party por 1 turno. | Concede shield alto, aumenta Defense da party por 2 turnos e remove Mark dos aliados. |
 
 ## Perfil de gameplay
 
@@ -132,17 +217,34 @@ Acessórios:
 - Veneno alquímico
 ```
 
-## Habilidades até o nível 10
+## Skills da classe
 
-| Nível | Habilidade | Tipo | Ranks de uso | Alvos válidos | Descrição |
-|---:|---|---|---|---|---|
-| 1 | Corte Rápido | Ataque | 1-3 | Inimigos 1-2 | Ataque físico rápido. |
-| 1 | Passo Sombrio | Mobilidade | 1-3 | Self | Move-se 1 rank para trás e ganha evasão por 1 turno. |
-| 2 | Punhalada Exposta | Ataque | 1-3 | Inimigos 1-3 | Causa dano bônus contra alvos com debuff. |
-| 4 | Lâmina Envenenada | Ataque/status | 1-3 | Inimigos 1-2 | Dano leve e aplica poison por 3 turnos. |
-| 6 | Execução Silenciosa | Ataque | 1-3 | Inimigos 1-3 | Dano alto contra inimigos com menos de 35% de HP. |
-| 8 | Dança das Facas | Área | 2-3 | Inimigos 1-3 | Ataca dois inimigos aleatórios. |
-| 10 | Marca da Morte | Debuff/execução | 2-3 | Inimigos 1-4 | Marca um alvo; ataques contra ele causam dano aumentado por 2 turnos. |
+Skills iniciais:
+
+```text
+- Corte Rápido
+- Passo Sombrio
+```
+
+| Skill | ID sugerido | Tipo | Inicial | Aprendizado sugerido | Ranks de uso | Alvos válidos |
+|---|---|---|---|---|---|---|
+| Corte Rápido | `skill.rogue.quick_cut` | Ofensiva | Sim | Inicial | 1-3 | Inimigos 1-2 |
+| Passo Sombrio | `skill.rogue.shadow_step` | Buff/Defensiva | Sim | Inicial | 1-3 | Self |
+| Punhalada Exposta | `skill.rogue.exposed_stab` | Ofensiva | Não | Resting site após nível 2 | 1-3 | Inimigos 1-3 |
+| Lâmina Envenenada | `skill.rogue.poisoned_blade` | Ofensiva/Debuff | Não | Resting site após nível 4 | 1-3 | Inimigos 1-2 |
+| Execução Silenciosa | `skill.rogue.silent_execution` | Ofensiva | Não | Resting site após nível 6 | 1-3 | Inimigos 1-3 |
+| Marca da Morte | `skill.rogue.death_mark` | Debuff | Não | Resting site após nível 8 | 2-3 | Inimigos 1-4 |
+
+## Efeitos por nível de skill
+
+| Skill | Nível 1 | Nível 2 | Nível 3 |
+|---|---|---|---|
+| Corte Rápido | Dano médio com bônus pequeno de Speed na próxima rodada. | Dano médio aumentado pela curva Fibonacci e bônus maior de Speed. | Dano médio aumentado pela curva Fibonacci e chance de agir mais cedo no próximo turno. |
+| Passo Sombrio | Move 1 rank para trás e ganha Evasion por 1 turno. | Move 1 rank para trás, ganha Evasion maior e remove Mark. | Move 1 rank para trás, ganha Evasion alta e aplica Haste por 1 turno. |
+| Punhalada Exposta | Dano médio; dano bônus contra alvo com debuff. | Dano médio aumentado pela curva Fibonacci; bônus maior contra alvo com debuff. | Dano alto pela curva Fibonacci contra alvo com debuff e pequena chance de crítico adicional. |
+| Lâmina Envenenada | Dano leve e aplica Poison por 2 turnos. | Dano leve aumentado pela curva Fibonacci e Poison por 3 turnos. | Dano médio pela curva Fibonacci, Poison por 3 turnos e aplica Vulnerable se o alvo já estiver envenenado. |
+| Execução Silenciosa | Dano alto contra alvo abaixo de 35% de HP. | Dano alto aumentado pela curva Fibonacci contra alvo abaixo de 45% de HP. | Dano alto aumentado pela curva Fibonacci; se derrotar o alvo, ganha Evasion por 1 turno. |
+| Marca da Morte | Aplica Mark por 2 turnos. | Aplica Mark e reduz Evasion do alvo por 2 turnos. | Aplica Mark, reduz Evasion e aumenta dano crítico recebido pelo alvo por 2 turnos. |
 
 ## Perfil de gameplay
 
@@ -180,17 +282,34 @@ Acessórios:
 - Amuleto de cura
 ```
 
-## Habilidades até o nível 10
+## Skills da classe
 
-| Nível | Habilidade | Tipo | Ranks de uso | Alvos válidos | Descrição |
-|---:|---|---|---|---|---|
-| 1 | Prece Menor | Cura | 3-4 | Aliado único | Cura leve em um aliado. |
-| 1 | Luz da Vela | Ataque sagrado | 3-4 | Inimigos 1-3 | Dano leve; bônus contra mortos-vivos. |
-| 2 | Bênção Frágil | Suporte | 3-4 | Aliado único | Aumenta defesa de um aliado por 2 turnos. |
-| 4 | Purificar Feridas | Cura/status | 3-4 | Aliado único | Cura leve e remove poison ou bleed. |
-| 6 | Círculo de Cinzas | Defesa de grupo | 3-4 | Todos os aliados | Reduz dano recebido por toda a party por 1 turno. |
-| 8 | Voto de Sacrifício | Cura avançada | 3-4 | Aliado único | Cura alta em um aliado, mas causa pequeno dano à própria Acólita. |
-| 10 | Chama Consagrada | Ultimate suporte | 3-4 | Todos os aliados | Cura moderada toda a party e remove 1 debuff de cada aliado. |
+Skills iniciais:
+
+```text
+- Prece Menor
+- Luz da Vela
+```
+
+| Skill | ID sugerido | Tipo | Inicial | Aprendizado sugerido | Ranks de uso | Alvos válidos |
+|---|---|---|---|---|---|---|
+| Prece Menor | `skill.acolyte.minor_prayer` | Defensiva | Sim | Inicial | 3-4 | Aliado único |
+| Luz da Vela | `skill.acolyte.candlelight` | Ofensiva | Sim | Inicial | 3-4 | Inimigos 1-3 |
+| Bênção Frágil | `skill.acolyte.fragile_blessing` | Buff | Não | Resting site após nível 2 | 3-4 | Aliado único |
+| Purificar Feridas | `skill.acolyte.cleanse_wounds` | Defensiva | Não | Resting site após nível 4 | 3-4 | Aliado único |
+| Círculo de Cinzas | `skill.acolyte.ash_circle` | Defensiva/Buff | Não | Resting site após nível 6 | 3-4 | Todos os aliados |
+| Chama Consagrada | `skill.acolyte.consecrated_flame` | Defensiva/Buff | Não | Resting site após nível 8 | 3-4 | Todos os aliados |
+
+## Efeitos por nível de skill
+
+| Skill | Nível 1 | Nível 2 | Nível 3 |
+|---|---|---|---|
+| Prece Menor | Cura leve em um aliado. | Cura moderada e remove Mark. | Cura moderada, remove Mark e concede shield pequeno. |
+| Luz da Vela | Dano leve sagrado; bônus contra mortos-vivos. | Dano leve aumentado pela curva Fibonacci; bônus maior contra mortos-vivos. | Dano médio pela curva Fibonacci contra mortos-vivos e aplica Weak por 1 turno. |
+| Bênção Frágil | Aumenta Defense de um aliado por 2 turnos. | Aumenta Defense e Resistance por 2 turnos. | Aumenta Defense, Resistance e cura recebida por 2 turnos. |
+| Purificar Feridas | Cura leve e remove Poison ou Bleed. | Cura moderada e remove até 1 status negativo comum. | Cura moderada, remove até 2 status negativos comuns e concede Resistance por 1 turno. |
+| Círculo de Cinzas | Reduz dano recebido pela party por 1 turno. | Reduz dano recebido pela party por 2 turnos. | Reduz dano recebido, aumenta Resistance da party e remove Weak. |
+| Chama Consagrada | Cura leve em todos os aliados. | Cura moderada em todos os aliados e remove 1 debuff. | Cura moderada em todos os aliados, remove 1 debuff e aplica regeneração leve por 2 turnos. |
 
 ## Perfil de gameplay
 
@@ -229,17 +348,34 @@ Acessórios:
 - Fragmento rúnico
 ```
 
-## Habilidades até o nível 10
+## Skills da classe
 
-| Nível | Habilidade | Tipo | Ranks de uso | Alvos válidos | Descrição |
-|---:|---|---|---|---|---|
-| 1 | Faísca Profana | Ataque mágico | 3-4 | Inimigos 1-4 | Dano mágico contra um alvo. |
-| 1 | Selo de Lentidão | Debuff | 3-4 | Inimigos 1-4 | Reduz velocidade do alvo por 2 turnos. |
-| 2 | Estilhaço Arcano | Ataque mágico | 3-4 | Inimigos 2-4 | Dano médio contra backline. |
-| 4 | Névoa do Túmulo | Controle | 3-4 | Todos os inimigos | Reduz precisão dos inimigos por 1 turno. |
-| 6 | Explosão Rúnica | Área | 3-4 | Todos os inimigos | Dano leve em todos os inimigos. |
-| 8 | Correntes Etéreas | Controle | 3-4 | Inimigos 1-3 | Chance de stun em um inimigo. |
-| 10 | Cometa Sepulcral | Ultimate ofensiva | 3-4 | Inimigo único + adjacentes | Dano alto em um alvo e dano leve aos adjacentes. |
+Skills iniciais:
+
+```text
+- Faísca Profana
+- Selo de Lentidão
+```
+
+| Skill | ID sugerido | Tipo | Inicial | Aprendizado sugerido | Ranks de uso | Alvos válidos |
+|---|---|---|---|---|---|---|
+| Faísca Profana | `skill.arcanist.profane_spark` | Ofensiva | Sim | Inicial | 3-4 | Inimigos 1-4 |
+| Selo de Lentidão | `skill.arcanist.slowing_seal` | Debuff | Sim | Inicial | 3-4 | Inimigos 1-4 |
+| Estilhaço Arcano | `skill.arcanist.arcane_shard` | Ofensiva | Não | Resting site após nível 2 | 3-4 | Inimigos 2-4 |
+| Névoa do Túmulo | `skill.arcanist.grave_mist` | Debuff | Não | Resting site após nível 4 | 3-4 | Todos os inimigos |
+| Explosão Rúnica | `skill.arcanist.runic_burst` | Ofensiva | Não | Resting site após nível 6 | 3-4 | Todos os inimigos |
+| Cometa Sepulcral | `skill.arcanist.sepulchral_comet` | Ofensiva/Debuff | Não | Resting site após nível 8 | 3-4 | Inimigo único + adjacentes |
+
+## Efeitos por nível de skill
+
+| Skill | Nível 1 | Nível 2 | Nível 3 |
+|---|---|---|---|
+| Faísca Profana | Dano mágico médio em um alvo. | Dano mágico médio aumentado pela curva Fibonacci. | Dano mágico alto pela curva Fibonacci e pequena chance de aplicar Vulnerable. |
+| Selo de Lentidão | Aplica Slow por 2 turnos. | Aplica Slow maior por 2 turnos e reduz Evasion. | Aplica Slow maior por 3 turnos e reduz Evasion e Accuracy. |
+| Estilhaço Arcano | Dano médio contra backline. | Dano médio aumentado pela curva Fibonacci e ignora pequena parte de Resistance. | Dano alto pela curva Fibonacci e ignora parte maior de Resistance. |
+| Névoa do Túmulo | Reduz Accuracy de todos os inimigos por 1 turno. | Reduz Accuracy por 2 turnos. | Reduz Accuracy e Critical por 2 turnos. |
+| Explosão Rúnica | Dano leve em todos os inimigos. | Dano em área aumentado pela curva Fibonacci. | Dano em área aumentado pela curva Fibonacci e aplica Weak por 1 turno em inimigos atingidos. |
+| Cometa Sepulcral | Dano alto em um alvo e dano leve aos adjacentes. | Dano alto aumentado pela curva Fibonacci e maior dano adjacente. | Dano alto aumentado pela curva Fibonacci, dano adjacente e aplica Vulnerable no alvo principal. |
 
 ## Perfil de gameplay
 
@@ -279,21 +415,38 @@ Acessórios:
 - Mapa rasgado
 ```
 
-## Habilidades até o nível 10
+## Skills da classe
 
-| Nível | Habilidade | Tipo | Ranks de uso | Alvos válidos | Descrição |
-|---:|---|---|---|---|---|
-| 1 | Disparo Preciso | Ataque à distância | 2-4 | Inimigos 2-4 | Dano contra backline. |
-| 1 | Inspecionar Fraqueza | Debuff | 2-4 | Inimigos 1-4 | Reduz defesa do alvo. |
-| 2 | Tiro de Cobertura | Ataque/suporte | 2-4 | Inimigo 1-3 + aliado | Dano leve e aumenta evasão de um aliado. |
-| 4 | Armadilha de Ossos | Controle | 2-4 | Inimigo 1 | Chance de stun ou slow no alvo frontal. |
-| 6 | Saqueador Experiente | Passiva | Qualquer | Pós-combate | Aumenta levemente gold recebido após combate. |
-| 8 | Flecha Perfurante | Ataque | 2-4 | Inimigos alinhados | Atinge dois inimigos alinhados. |
-| 10 | Relíquia Instável | Ataque especial | 2-4 | Inimigos 1-4 | Dano alto aleatório com chance de burn ou stun. |
+Skills iniciais:
+
+```text
+- Disparo Preciso
+- Inspecionar Fraqueza
+```
+
+| Skill | ID sugerido | Tipo | Inicial | Aprendizado sugerido | Ranks de uso | Alvos válidos |
+|---|---|---|---|---|---|---|
+| Disparo Preciso | `skill.relic_hunter.precise_shot` | Ofensiva | Sim | Inicial | 2-4 | Inimigos 2-4 |
+| Inspecionar Fraqueza | `skill.relic_hunter.inspect_weakness` | Debuff | Sim | Inicial | 2-4 | Inimigos 1-4 |
+| Tiro de Cobertura | `skill.relic_hunter.covering_shot` | Ofensiva/Buff | Não | Resting site após nível 2 | 2-4 | Inimigo 1-3 + aliado único |
+| Armadilha de Ossos | `skill.relic_hunter.bone_trap` | Debuff | Não | Resting site após nível 4 | 2-4 | Inimigo 1 |
+| Flecha Perfurante | `skill.relic_hunter.piercing_bolt` | Ofensiva | Não | Resting site após nível 6 | 2-4 | Inimigos alinhados |
+| Relíquia Instável | `skill.relic_hunter.unstable_relic` | Ofensiva/Debuff | Não | Resting site após nível 8 | 2-4 | Inimigos 1-4 |
+
+## Efeitos por nível de skill
+
+| Skill | Nível 1 | Nível 2 | Nível 3 |
+|---|---|---|---|
+| Disparo Preciso | Dano médio contra backline. | Dano médio aumentado pela curva Fibonacci e bônus de Accuracy. | Dano alto pela curva Fibonacci contra backline e chance de crítico aumentada. |
+| Inspecionar Fraqueza | Reduz Defense do alvo por 2 turnos. | Reduz Defense e Evasion por 2 turnos. | Reduz Defense, Evasion e revela o alvo, aumentando chance de crítico contra ele. |
+| Tiro de Cobertura | Dano leve e aumenta Evasion de um aliado por 1 turno. | Dano leve aumentado pela curva Fibonacci e Evasion por 2 turnos. | Dano médio pela curva Fibonacci, Evasion por 2 turnos e remove Mark do aliado. |
+| Armadilha de Ossos | Aplica Slow no inimigo frontal. | Aplica Slow e chance de stun. | Aplica Slow, chance maior de stun e Vulnerable se o alvo estiver no rank 1. |
+| Flecha Perfurante | Dano médio dividido entre dois inimigos alinhados. | Dano aumentado pela curva Fibonacci em dois inimigos alinhados. | Dano aumentado pela curva Fibonacci, ignora parte da Defense e aplica Bleed leve. |
+| Relíquia Instável | Dano alto aleatório em um alvo e chance de Burn ou Stun. | Dano alto aumentado pela curva Fibonacci e chance maior de efeito aleatório. | Dano alto aumentado pela curva Fibonacci, aplica efeito aleatório garantido e pode atingir adjacente com dano leve. |
 
 ## Perfil de gameplay
 
-O Caçador de Relíquias melhora o retorno econômico da run e adiciona utilidade. É útil como recompensa/desbloqueio após o primeiro boss.
+O Caçador de Relíquias melhora o controle tático da run e adiciona utilidade. É útil como recompensa/desbloqueio após o primeiro boss.
 
 ---
 
@@ -329,24 +482,40 @@ Acessórios:
 - Livro de ritos
 ```
 
-## Habilidades até o nível 10
+## Skills da classe
 
-| Nível | Habilidade | Tipo | Ranks de uso | Alvos válidos | Descrição |
-|---:|---|---|---|---|---|
-| 1 | Golpe Consagrado | Ataque | 1-3 | Inimigos 1-2 | Dano físico/sagrado. |
-| 1 | Repreensão | Debuff | 2-3 | Inimigos 1-4 | Reduz ataque de um inimigo por 2 turnos. |
-| 2 | Selo de Banimento | Debuff | 2-3 | Inimigos 1-4 | Inimigo recebe mais dano sagrado por 2 turnos. |
-| 4 | Chicote de Prata | Ataque | 2-3 | Inimigos 1-3 | Dano médio; bônus contra mortos-vivos. |
-| 6 | Rito de Proteção | Suporte | 2-3 | Aliado único | Protege um aliado contra o próximo debuff. |
-| 8 | Expulsar Corrupção | Ataque/status | 2-3 | Inimigos 1-4 | Remove buff de inimigo e causa dano sagrado. |
-| 10 | Juízo Final | Ultimate | 2-3 | Todos os inimigos | Dano alto contra mortos-vivos; dano moderado contra outros tipos. |
+Skills iniciais:
+
+```text
+- Golpe Consagrado
+- Repreensão
+```
+
+| Skill | ID sugerido | Tipo | Inicial | Aprendizado sugerido | Ranks de uso | Alvos válidos |
+|---|---|---|---|---|---|---|
+| Golpe Consagrado | `skill.exorcist.consecrated_strike` | Ofensiva | Sim | Inicial | 1-3 | Inimigos 1-2 |
+| Repreensão | `skill.exorcist.rebuke` | Debuff | Sim | Inicial | 2-3 | Inimigos 1-4 |
+| Selo de Banimento | `skill.exorcist.banishment_seal` | Debuff | Não | Resting site após nível 2 | 2-3 | Inimigos 1-4 |
+| Chicote de Prata | `skill.exorcist.silver_whip` | Ofensiva | Não | Resting site após nível 4 | 2-3 | Inimigos 1-3 |
+| Rito de Proteção | `skill.exorcist.rite_of_protection` | Defensiva/Buff | Não | Resting site após nível 6 | 2-3 | Aliado único |
+| Juízo Final | `skill.exorcist.final_judgment` | Ofensiva/Debuff | Não | Resting site após nível 8 | 2-3 | Todos os inimigos |
+
+## Efeitos por nível de skill
+
+| Skill | Nível 1 | Nível 2 | Nível 3 |
+|---|---|---|---|
+| Golpe Consagrado | Dano médio sagrado; bônus contra undead. | Dano médio aumentado pela curva Fibonacci; bônus maior contra undead. | Dano alto pela curva Fibonacci contra undead e aplica Weak por 1 turno. |
+| Repreensão | Reduz Attack do alvo por 2 turnos. | Reduz Attack e Accuracy por 2 turnos. | Reduz Attack, Accuracy e Critical por 2 turnos. |
+| Selo de Banimento | Alvo recebe mais dano sagrado por 2 turnos. | Alvo recebe mais dano sagrado e perde Resistance por 2 turnos. | Alvo recebe mais dano sagrado, perde Resistance e não pode receber buff por 1 turno. |
+| Chicote de Prata | Dano médio contra ranks 1-3; bônus contra undead. | Dano médio aumentado pela curva Fibonacci e aplica Bleed leve contra não-undead. | Dano alto pela curva Fibonacci, bônus contra undead e aplica Mark. |
+| Rito de Proteção | Protege um aliado contra o próximo debuff. | Protege contra o próximo debuff e aumenta Resistance por 2 turnos. | Protege contra até 2 debuffs, aumenta Resistance e remove Weak. |
+| Juízo Final | Dano leve em todos os inimigos; dano maior contra undead. | Dano em área aumentado pela curva Fibonacci e aplica Weak em undead. | Dano em área aumentado pela curva Fibonacci, aplica Weak em undead e reduz Resistance dos inimigos atingidos. |
 
 ## Perfil de gameplay
 
 A Exorcista é particularmente forte no primeiro bioma, mas deve ser menos dominante em biomas futuros para evitar dependência excessiva de uma classe.
 
 ---
-
 ## 3. Resumo das classes jogáveis
 
 | Personagem base | Classe | ID | Função | Ranks ideais | Disponibilidade |

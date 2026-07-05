@@ -26,7 +26,7 @@ GitHub + Codex
 | Sprint 0 | Fundação técnica e builds mobile. | Implemented parcial |
 | Sprint 1 | Protótipo de combate. | Implemented parcial |
 | Sprint 2 | Dungeon run procedural. | Implemented inicial |
-| Sprint 3 | Sistemas RPG. | Planned |
+| Sprint 3 | Sistemas RPG. | Implemented inicial |
 | Sprint 4 | Conta, save local e cloud save. | Implemented parcial |
 | Sprint 5 | Monetização com ads e IAP. | Planned |
 | Sprint 6 | Conteúdo inicial, balanceamento e soft launch. | Planned |
@@ -245,7 +245,16 @@ Equipamentos básicos
 Status effects expandidos
 ```
 
-Status: Planned.
+Status: Implemented inicial.
+
+Implementado nesta sprint:
+- `HeroProgressionDefinition` (ScriptableObject) com tabela Fibonacci níveis 1–10.
+- `HeroProgressionService` (pure C#) com queries de dano médio, XP, level-up, skill availability, multiplicador de nível de skill.
+- `HeroState` estendido com `BaseAverageDamage`, `XpToNextLevel`, `IsMaxLevel`, `LevelUp()`.
+- `ResolvedReward` e `RewardResolver` estendidos com XP por combate.
+- `DungeonRunService` concede XP e executa level-up automático após vitória.
+- `IRestSiteService` / `RestSiteService` expõem `GetAvailableSkills()` por classe e nível.
+- Cobertura de testes para níveis 1, 2, 3, 5, 8, 10.
 
 ### Tarefas
 

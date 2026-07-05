@@ -4,6 +4,7 @@ using System.Reflection;
 using DungeonCrawler.Combat;
 using DungeonCrawler.Core.Services;
 using DungeonCrawler.Data.Definitions;
+using DungeonCrawler.Data.State;
 using DungeonCrawler.Dungeon;
 using NUnit.Framework;
 using UnityEngine;
@@ -201,6 +202,45 @@ namespace DungeonCrawler.Tests.EditMode
             Assert.That(resolved, Is.SameAs(_defaultService));
         }
 
+        [Test]
+        public void GetAvailableSkills_Level1_ReturnsEmpty()
+        {
+            var classDef = CreateHeroClassDefinition();
+            var hero = new HeroState(classDef, "Test Hero", Rarity.Common);
+
+            var skills = _defaultService.GetAvailableSkills(classDef, hero);
+
+            Assert.That(skills, Is.Empty);
+        }
+
+        [Test]
+        public void GetAvailableSkills_Level2_ReturnsSkill()
+        {
+            var classDef = CreateHeroClassDefinition();
+            var hero = new HeroState(classDef, "Test Hero", Rarity.Common);
+            hero.AddXp(HeroProgressionService.GetXpToNextLevel(hero.Level));
+            HeroProgressionService.TryLevelUp(hero);
+
+            var skills = _defaultService.GetAvailableSkills(classDef, hero);
+
+            Assert.That(hero.Level, Is.EqualTo(2));
+            Assert.That(skills.Count, Is.EqualTo(1));
+            Assert.That(skills[0].Id, Is.EqualTo("skill.test.shield_charge"));
+        }
+
+        [Test]
+        public void GetAvailableSkills_LearnedSkill_NotReturned()
+        {
+            var classDef = CreateHeroClassDefinition();
+            var hero = new HeroState(classDef, "Test Hero", Rarity.Common);
+            hero.AddXp(HeroProgressionService.GetXpToNextLevel(hero.Level));
+            HeroProgressionService.TryLevelUp(hero);
+            hero.LearnSkill("skill.test.shield_charge");
+            var skills = _defaultService.GetAvailableSkills(classDef, hero);
+
+            Assert.That(skills, Is.Empty);
+        }
+
         private static GeneratedFloor CreateFloor(int floorNumber, bool hasRestingSite)
         {
             return new GeneratedFloor(floorNumber, FloorType.Boss, hasRestingSite, false, "crypt", null, 0);
@@ -230,6 +270,52 @@ namespace DungeonCrawler.Tests.EditMode
             SetPrivateField(typeof(CombatStats), boxedStats, "defense", defense);
             SetPrivateField(typeof(CombatStats), boxedStats, "speed", speed);
             return (CombatStats)boxedStats;
+        }
+
+        private HeroClassDefinition CreateHeroClassDefinition()
+        {
+            var def = ScriptableObject.CreateInstance<HeroClassDefinition>();
+            _definitions.Add(def);
+            SetPrivateField(typeof(GameDefinition), def, "id", "test_class");
+            SetPrivateField(typeof(GameDefinition), def, "displayName", "Test Class");
+            SetPrivateField(typeof(HeroClassDefinition), def, "baseStats", new CombatStats(30, 5, 5, 5));
+            SetPrivateField(typeof(HeroClassDefinition), def, "baseRarity", Rarity.Common);
+
+            var strike = CreateSkill("skill.test.guard_strike", "Guard Strike");
+            var stance = CreateSkill("skill.test.iron_stance", "Iron Stance");
+            var shieldCharge = CreateSkill("skill.test.shield_charge", "Shield Charge");
+
+            SetPrivateField(typeof(HeroClassDefinition), def, "startingSkills", new[] { strike, stance });
+
+            var entryType = typeof(HeroClassDefinition.SkillByLevelEntry);
+            var levelField = entryType.GetField("level", BindingFlags.Instance | BindingFlags.NonPublic);
+            var skillField = entryType.GetField("skill", BindingFlags.Instance | BindingFlags.NonPublic);
+
+            var entry1 = new HeroClassDefinition.SkillByLevelEntry();
+            levelField.SetValue(entry1, 1);
+            skillField.SetValue(entry1, strike);
+
+            var entry2 = new HeroClassDefinition.SkillByLevelEntry();
+            levelField.SetValue(entry2, 1);
+            skillField.SetValue(entry2, stance);
+
+            var entry3 = new HeroClassDefinition.SkillByLevelEntry();
+            levelField.SetValue(entry3, 2);
+            skillField.SetValue(entry3, shieldCharge);
+
+            SetPrivateField(typeof(HeroClassDefinition), def, "skillsByLevel",
+                new[] { entry1, entry2, entry3 });
+
+            return def;
+        }
+
+        private SkillDefinition CreateSkill(string id, string displayName)
+        {
+            var skill = ScriptableObject.CreateInstance<SkillDefinition>();
+            _definitions.Add(skill);
+            SetPrivateField(typeof(GameDefinition), skill, "id", id);
+            SetPrivateField(typeof(GameDefinition), skill, "displayName", displayName);
+            return skill;
         }
 
         private RestSiteDefinition CreateRestSiteDefinition(float healPercent)

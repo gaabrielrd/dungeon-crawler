@@ -351,8 +351,33 @@ namespace DungeonCrawler.Core.Services
                 ActiveRun.InventorySnapshot.AddItem(item.ItemId, item.Quantity);
             }
 
+            ApplyXpToHeroes(reward.XpReward);
+
             ActiveRun.LastResolvedReward = reward;
             ApplyRewardToSave(reward);
+        }
+
+        private void ApplyXpToHeroes(int xpAmount)
+        {
+            if (xpAmount <= 0)
+                return;
+
+            var roster = ActiveRun.Roster;
+            if (roster == null || roster.Count == 0)
+                return;
+
+            for (var i = 0; i < roster.Count; i++)
+            {
+                var hero = roster[i];
+                if (hero == null || hero.IsDead)
+                    continue;
+
+                hero.AddXp(xpAmount);
+
+                while (HeroProgressionService.TryLevelUp(hero))
+                {
+                }
+            }
         }
 
         private RewardContext CreateRewardContext()
