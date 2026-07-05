@@ -100,7 +100,7 @@ Status atual:
 
 | Área | Status |
 |---|---|
-| Dados estáticos via ScriptableObjects | Implemented inicial |
+| Dados estáticos via ScriptableObjects | Implemented |
 | Estado runtime de combate | Implemented |
 | Serviços de domínio de combate | Implemented parcial |
 | Serviços externos, UGS, IAP, Ads, Remote Config | Planned |

@@ -19,6 +19,7 @@ namespace DungeonCrawler.UI
         [SerializeField] private Button backToMainMenuButton;
         [SerializeField] private Sprite[] playerPortraits;
         [SerializeField] private Sprite[] enemyPortraits;
+        [SerializeField] private TestCombatDataProvider testData;
 
         private CombatController _combatController;
         private CombatFormationState _formation;
@@ -230,15 +231,30 @@ namespace DungeonCrawler.UI
         {
             var formation = new CombatFormationState();
 
-            formation.AddCombatant(CreateCombatant("hero_front", "Knight", CombatSide.Player, 1, 28, 8, 4, 9));
-            formation.AddCombatant(CreateCombatant("hero_mid", "Ranger", CombatSide.Player, 2, 22, 10, 2, 12));
-            formation.AddCombatant(CreateCombatant("hero_back", "Mage", CombatSide.Player, 3, 18, 11, 1, 11));
-            formation.AddCombatant(CreateCombatant("hero_support", "Cleric", CombatSide.Player, 4, 24, 6, 3, 8));
+            if (testData != null && testData.HeroDefinitions.Length >= 4 && testData.EnemyDefinitions.Length >= 1)
+            {
+                formation.AddCombatant(CombatantStateFactory.CreateHero(testData.HeroDefinitions[0], 1));
+                formation.AddCombatant(CombatantStateFactory.CreateHero(testData.HeroDefinitions[1], 2));
+                formation.AddCombatant(CombatantStateFactory.CreateHero(testData.HeroDefinitions[2], 3));
+                formation.AddCombatant(CombatantStateFactory.CreateHero(testData.HeroDefinitions[3], 4));
 
-            formation.AddCombatant(CreateCombatant("enemy_brute", "Brute", CombatSide.Enemy, 1, 30, 7, 3, 7));
-            formation.AddCombatant(CreateCombatant("enemy_raider", "Raider", CombatSide.Enemy, 2, 20, 8, 2, 10));
-            formation.AddCombatant(CreateCombatant("enemy_shaman", "Shaman", CombatSide.Enemy, 3, 16, 9, 1, 11));
-            formation.AddCombatant(CreateCombatant("enemy_guard", "Guard", CombatSide.Enemy, 4, 25, 6, 4, 6));
+                for (var rank = 1; rank <= CombatRank.MaxCombatantsPerSide; rank++)
+                {
+                    formation.AddCombatant(CombatantStateFactory.CreateEnemy(testData.EnemyDefinitions[0], rank));
+                }
+            }
+            else
+            {
+                formation.AddCombatant(CreateCombatant("hero_front", "Knight", CombatSide.Player, 1, 28, 8, 4, 9));
+                formation.AddCombatant(CreateCombatant("hero_mid", "Ranger", CombatSide.Player, 2, 22, 10, 2, 12));
+                formation.AddCombatant(CreateCombatant("hero_back", "Mage", CombatSide.Player, 3, 18, 11, 1, 11));
+                formation.AddCombatant(CreateCombatant("hero_support", "Cleric", CombatSide.Player, 4, 24, 6, 3, 8));
+
+                formation.AddCombatant(CreateCombatant("enemy_brute", "Brute", CombatSide.Enemy, 1, 30, 7, 3, 7));
+                formation.AddCombatant(CreateCombatant("enemy_raider", "Raider", CombatSide.Enemy, 2, 20, 8, 2, 10));
+                formation.AddCombatant(CreateCombatant("enemy_shaman", "Shaman", CombatSide.Enemy, 3, 16, 9, 1, 11));
+                formation.AddCombatant(CreateCombatant("enemy_guard", "Guard", CombatSide.Enemy, 4, 25, 6, 4, 6));
+            }
 
             return formation;
         }

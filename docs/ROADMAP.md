@@ -108,8 +108,8 @@ Criar o primeiro combate funcional com party, inimigos, turnos, habilidades e vi
 | DamageResolver | Implemented |
 | StatusEffectResolver básico | Planned |
 | UI básica de combate | Implemented inicial |
-| 1 herói jogável | Planned |
-| 1 inimigo comum | Planned |
+| 4 heróis jogáveis (guardian, rogue, acolyte, arcanist) | Implemented inicial |
+| 1 inimigo comum (skeleton_grunt) | Implemented inicial |
 | Vitória e derrota | Implemented |
 | Testes de regras principais | Implemented |
 
