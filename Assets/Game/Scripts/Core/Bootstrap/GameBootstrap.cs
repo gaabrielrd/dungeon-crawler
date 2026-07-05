@@ -48,17 +48,20 @@ namespace DungeonCrawler.Core.Bootstrap
             var authService = new MockAuthService();
             var saveService = new LocalSaveService(authService);
             var sceneLoaderService = new SceneLoaderService();
+            var dungeonRunService = new DungeonRunService(eventBus);
 
             ServiceRegistry.Register<IEventBus>(eventBus);
             ServiceRegistry.Register<IAppConfigService>(appConfigService);
             ServiceRegistry.Register<IAuthService>(authService);
             ServiceRegistry.Register<ISaveService>(saveService);
             ServiceRegistry.Register<ISceneLoaderService>(sceneLoaderService);
+            ServiceRegistry.Register<IDungeonRunService>(dungeonRunService);
 
             await appConfigService.InitializeAsync();
             await authService.InitializeAsync();
             await saveService.InitializeAsync();
             await sceneLoaderService.InitializeAsync();
+            await dungeonRunService.InitializeAsync();
 
             Debug.Log("[Bootstrap] Global services initialized.");
         }
