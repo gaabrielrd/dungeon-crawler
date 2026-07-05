@@ -535,22 +535,3 @@ save não foi quebrado
 economia não pode duplicar recurso facilmente
 UI é utilizável em tela mobile
 ```
-
----
-
-## 14. Primeiro prompt recomendado para Codex
-
-```text
-Leia os arquivos GAME_DESIGN.md, TECH_DESIGN.md, CODING_GUIDELINES.md, SAVE_SYSTEM.md, MONETIZATION_DESIGN.md, CONTENT_PIPELINE.md e ROADMAP.md.
-
-Crie a estrutura inicial de pastas em Assets/Game conforme TECH_DESIGN.md.
-Crie os assembly definitions principais.
-Crie uma cena Bootstrap e uma cena MainMenu simples.
-Crie um GameBootstrap.cs que inicializa um ServiceRegistry mínimo.
-Crie um primeiro teste EditMode validando que o ServiceRegistry registra e resolve um serviço mock.
-
-Não implemente combate ainda.
-Não implemente Unity Gaming Services ainda.
-Não crie lógica de UI complexa.
-Siga CODING_GUIDELINES.md.
-```
