@@ -38,8 +38,8 @@ namespace DungeonCrawler.Tests.EditMode
             turnManager.RebuildTurnOrder();
 
             Assert.That(turnManager.TurnOrder.Count, Is.EqualTo(2));
-            Assert.That(turnManager.TurnOrder[0].DisplayName, Is.EqualTo("fast_hero"));
-            Assert.That(turnManager.TurnOrder[1].DisplayName, Is.EqualTo("slow_enemy"));
+            Assert.That(turnManager.TurnOrder[0].DefinitionId, Is.EqualTo("fast_hero"));
+            Assert.That(turnManager.TurnOrder[1].DefinitionId, Is.EqualTo("slow_enemy"));
         }
 
         [Test]
@@ -55,16 +55,19 @@ namespace DungeonCrawler.Tests.EditMode
             turnManager.RebuildTurnOrder();
 
             Assert.That(turnManager.TurnOrder.Count, Is.EqualTo(2));
-            Assert.That(turnManager.TurnOrder[0].Rank, Is.EqualTo(1));
-            Assert.That(turnManager.TurnOrder[1].Rank, Is.EqualTo(2));
+            Assert.That(turnManager.TurnOrder[0].Side, Is.EqualTo(CombatSide.Player));
+            Assert.That(turnManager.TurnOrder[0].Rank, Is.EqualTo(2));
+            Assert.That(turnManager.TurnOrder[1].Side, Is.EqualTo(CombatSide.Enemy));
+            Assert.That(turnManager.TurnOrder[1].Rank, Is.EqualTo(1));
         }
 
         [Test]
         public void DeadCombatantsDoNotReceiveTurns()
         {
             var formation = new CombatFormationState();
-            formation.AddCombatant(
-                new CombatantState("dead_hero", "Dead Hero", CombatSide.Player, 1, CreateStats(10, 5, 2, 10)));
+            var deadHero = new CombatantState("dead_hero", "Dead Hero", CombatSide.Player, 1, CreateStats(10, 5, 2, 10));
+            deadHero.CurrentHp = 0;
+            formation.AddCombatant(deadHero);
             formation.AddCombatant(
                 new CombatantState("alive_enemy", "Alive Enemy", CombatSide.Enemy, 1, CreateStats(10, 5, 2, 5)));
 
@@ -72,7 +75,7 @@ namespace DungeonCrawler.Tests.EditMode
 
             var firstCombatant = turnManager.GetNextCombatant();
             Assert.That(firstCombatant, Is.Not.Null);
-            Assert.That(firstCombatant.DisplayName, Is.EqualTo("alive_enemy"));
+            Assert.That(firstCombatant.DefinitionId, Is.EqualTo("alive_enemy"));
         }
 
         [Test]
@@ -92,7 +95,7 @@ namespace DungeonCrawler.Tests.EditMode
             turnManager.RebuildTurnOrder();
 
             Assert.That(turnManager.TurnOrder.Count, Is.EqualTo(1));
-            Assert.That(turnManager.TurnOrder[0].DisplayName, Is.EqualTo("hero"));
+            Assert.That(turnManager.TurnOrder[0].DefinitionId, Is.EqualTo("hero"));
         }
 
         private static CombatStats CreateStats(int maxHp, int attack, int defense, int speed)

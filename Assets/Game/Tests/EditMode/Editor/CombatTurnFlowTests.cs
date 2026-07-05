@@ -88,8 +88,8 @@ namespace DungeonCrawler.Tests.EditMode
             skippedHero2.CurrentHp = 0;
             controller.CompleteCurrentTurn();
 
-            Assert.That(controller.State, Is.EqualTo(CombatState.EnemyTurn));
-            Assert.That(controller.CurrentCombatant, Is.SameAs(enemy));
+            Assert.That(controller.State, Is.EqualTo(CombatState.Defeat));
+            Assert.That(controller.CurrentCombatant, Is.Null);
         }
 
         [Test]
@@ -103,8 +103,8 @@ namespace DungeonCrawler.Tests.EditMode
             enemy.CurrentHp = 0;
             controller.CompleteCurrentTurn();
 
-            Assert.That(controller.State, Is.EqualTo(CombatState.PlayerTurn));
-            Assert.That(controller.CurrentCombatant, Is.SameAs(hero));
+            Assert.That(controller.State, Is.EqualTo(CombatState.Victory));
+            Assert.That(controller.CurrentCombatant, Is.Null);
         }
 
         [Test]
