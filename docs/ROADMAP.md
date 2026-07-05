@@ -107,7 +107,7 @@ Criar o primeiro combate funcional com party, inimigos, turnos, habilidades e vi
 | TargetingRulesService | Implemented |
 | DamageResolver | Implemented |
 | StatusEffectResolver básico | Planned |
-| UI básica de combate | Planned |
+| UI básica de combate | Implemented inicial |
 | 1 herói jogável | Planned |
 | 1 inimigo comum | Planned |
 | Vitória e derrota | Implemented |
@@ -128,19 +128,19 @@ Criar o primeiro combate funcional com party, inimigos, turnos, habilidades e vi
 | Implementar morte de combatente. | Implemented |
 | Implementar fluxo de vitória/derrota. | Implemented |
 | Implementar eventos de morte, vitória e derrota. | Implemented |
-| Criar UI temporária de combate. | Planned |
+| Criar UI temporária de combate. | Implemented inicial |
 | Criar botão de skill. | Planned |
-| Criar seleção de alvo. | Planned |
+| Criar seleção de alvo. | Implemented inicial |
 | Criar testes EditMode. | Implemented |
 
 ### Critérios de aceite
 
 | Critério | Status |
 |---|---|
-| Jogador inicia combate. | Implemented no domínio; UI Planned |
-| Jogador escolhe habilidade. | Planned |
+| Jogador inicia combate. | Implemented |
+| Jogador escolhe habilidade. | Implemented inicial (ataque básico) |
 | Sistema valida alvo por rank. | Implemented |
-| Inimigo age automaticamente. | Planned |
+| Inimigo age automaticamente. | Implemented inicial |
 | HP é reduzido corretamente. | Implemented |
 | Combate termina com vitória ou derrota. | Implemented |
 | Testes de TurnManager e TargetingRulesService passam. | Implemented |

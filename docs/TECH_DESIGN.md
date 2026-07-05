@@ -458,15 +458,15 @@ RemoteConfigService
 | CombatScene recebe EncounterDefinition + PartyState | Planned |
 | CombatController cria/recebe CombatantStates | Implemented parcial |
 | TurnManager calcula ordem inicial | Implemented |
-| UI renderiza estado | Planned |
-| Player escolhe Skill + Target | Planned |
+| UI renderiza estado | Implemented inicial |
+| Player escolhe Skill + Target | Implemented inicial (ataque básico + seleção de alvo válido) |
 | TargetingRulesService valida ação | Implemented |
 | CombatController executa comando básico | Implemented |
 | DamageResolver aplica dano básico | Implemented |
 | StatusEffectResolver aplica efeitos | Planned |
 | EventBus publica eventos de feedback, morte, vitória e derrota | Implemented |
 | TurnManager avança turno | Implemented |
-| AI decide ações dos inimigos | Planned |
+| AI decide ações dos inimigos | Implemented inicial (ataque básico em alvo vivo aleatório) |
 | Verificar morte, vitória e derrota | Implemented |
 | CombatRewardResolver gera recompensa | Planned |
 | DungeonRunService avança estado da run | Planned |
